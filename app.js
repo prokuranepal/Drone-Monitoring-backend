@@ -9,6 +9,7 @@ var passport = require('passport'); // A middleware for authentication of users.
 var authenticate = require('./authenticate'); // authentication strategy defined.
 
 var indexRouter = require('./routes/index');
+var usersRouter = require('./routes/userRouter');
 
 var mongoose = require('mongoose'); // Mongoose to interact with mongodb database
 var mongoose_init = require('./models/db'); // Initialiation/connection with mongodb database
