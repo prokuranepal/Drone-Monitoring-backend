@@ -7,6 +7,9 @@ var logger = require('morgan');
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 
+var mongoose = require('mongoose'); // Mongoose to interact with mongodb database
+var mongoose_init = require('./models/db'); // Initialiation/connection with mongodb database
+
 var app = express();
 
 // view engine setup
@@ -35,7 +38,12 @@ app.use(function(err, req, res, next) {
 
   // render the error page
   res.status(err.status || 500);
-  res.render('error');
+  // res.render('error');
+  // json error response
+  res.json({
+    status: false,
+    message: err.message
+  });
 });
 
 module.exports = app;
