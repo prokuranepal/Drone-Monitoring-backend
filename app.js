@@ -11,6 +11,7 @@ var authenticate = require('./authenticate'); // authentication strategy defined
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/userRouter');
 var missionRouter = require('./routes/missionRouter');
+var droneRouter = require('./routes/droneRouter');
 
 var mongoose = require('mongoose'); // Mongoose to interact with mongodb database
 var mongoose_init = require('./models/db'); // Initialiation/connection with mongodb database
@@ -32,6 +33,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/mission', missionRouter);
+app.use('/drone', droneRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
