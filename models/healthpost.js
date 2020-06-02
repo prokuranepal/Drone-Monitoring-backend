@@ -31,4 +31,8 @@ const HealthPostSchema = new mongoose.Schema({
     timestamps: true
 });
 
+HealthPostSchema.statics.totalHealthPosts = function () {
+    return this.countDocuments({});
+}
+
 module.exports = mongoose.model('HealthPost', HealthPostSchema);

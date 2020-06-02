@@ -9,7 +9,7 @@ const DroneSchema = new Schema({
     status: {
         type: String,
         enum: ['active', 'unactive', 'destroyed'],
-        default: 'on home'
+        default: 'unactive'
     },
     type: {
         type: String,
@@ -28,5 +28,21 @@ const DroneSchema = new Schema({
 }, {
     timestamps: true
 });
+
+DroneSchema.statics.totalDroneCount = function () {
+    return this.countDocuments({});
+};
+
+DroneSchema.statics.flyingDroneCount = function () {
+    return this.countDocuments({
+        status: 'active'
+    });
+};
+
+DroneSchema.statics.destroyedDroneCount = function () {
+    return this.countDocuments({
+        status: 'destroyed'
+    });
+};
 
 module.exports = mongoose.model('Drone', DroneSchema);

@@ -8,7 +8,7 @@ const MissionSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ['completed', 'requested','Cancel'],
+        enum: ['completed', 'requested', 'cancel'],
         default: 'requested'
     },
     home: {
@@ -27,5 +27,17 @@ const MissionSchema = new Schema({
 }, {
     timestamps: true
 });
+
+MissionSchema.statics.totalDeliveries = function () {
+    return this.countDocuments({
+        status: 'completed'
+    });
+};
+
+MissionSchema.statics.newRequest = function () {
+    return this.countDocuments({
+        status: 'requested'
+    });
+};
 
 module.exports = mongoose.model('Mission', MissionSchema);
