@@ -8,6 +8,7 @@ const cors = require('./cors');
 const Drone = require('../models/drone');
 const Mission = require('../models/mission');
 const HealthPost = require('../models/healthpost');
+const Hospital = require('../models/hospital');
 
 const dashboardRouter = express.Router();
 
@@ -23,6 +24,7 @@ dashboardRouter.route('/')
         var totalDeliveries = await Mission.totalDeliveries();
         var totalHealthPosts = await HealthPost.totalHealthPosts();
         var request = await Mission.newRequest();
+        var cdc_graph = await Hospital.getCDCGraph(req.query.hospitalId);
 
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');
@@ -35,7 +37,7 @@ dashboardRouter.route('/')
                 'request': request
             },
             'graphs': {
-                'cdc': 'aaa',
+                'cdc': cdc_graph,
                 'rhps': 'bbb'
             }
         });

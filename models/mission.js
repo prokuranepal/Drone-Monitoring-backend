@@ -19,11 +19,15 @@ const MissionSchema = new Schema({
         type: String,
         required: true
     },
+    requested_item: {
+        type: String,
+        enum: ['medicine','vaccine','blood', 'none']
+    },
     // TODO: Can be used to store mission file or complete mission
     missionObject: {
         type: String,
         required: true
-    }
+    },
 }, {
     timestamps: true
 });
