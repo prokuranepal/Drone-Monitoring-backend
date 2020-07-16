@@ -1,3 +1,5 @@
+<a href="https://codeclimate.com/github/prokuranepal/Drone-Monitoring-backend/maintainability"><img src="https://api.codeclimate.com/v1/badges/cf267dbf6e1710aa38a0/maintainability" /></a>
+<a href="https://codeclimate.com/github/prokuranepal/Drone-Monitoring-backend/test_coverage"><img src="https://api.codeclimate.com/v1/badges/cf267dbf6e1710aa38a0/test_coverage" /></a>
 # Drone Monitoring System
 
 ---

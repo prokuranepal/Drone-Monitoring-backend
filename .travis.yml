@@ -1,13 +1,13 @@
 sudo: true
-# env:
-  # global:
-    # - CC_TEST_REPORTER_ID=7334bc80812f9af3349f9abdc712b0406be44ea4807c0d7210915669ef58faed
+env:
+  global:
+    - CC_TEST_REPORTER_ID=0ed1e721cf9999e2a750251a6d07cc89614e05476c705cc8e9729104fa6dc22b
 language: node_js
 services: mongodb
-# before_script:
-  # - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-  # - chmod +x ./cc-test-reporter
-  # - ./cc-test-reporter before-build
+before_script:
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
 node_js:
   - "v13.6.0"
 cache:
@@ -15,5 +15,5 @@ cache:
     - node_modules
 script:
   - npm run-script coverage
-# after_script:
-  # - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
+after_script:
+  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
