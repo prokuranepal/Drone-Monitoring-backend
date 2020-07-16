@@ -1,5 +1,6 @@
 var createError = require('http-errors');
 var express = require('express');
+var socket_io = require('socket.io');
 var path = require('path');
 var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
@@ -18,6 +19,12 @@ var mongoose = require('mongoose'); // Mongoose to interact with mongodb databas
 var mongoose_init = require('./models/db'); // Initialiation/connection with mongodb database
 
 var app = express();
+
+// Socket.io initialized
+const io = socket_io();
+app.io = io;
+const socket_init = require('./socket/socket_init')(io);
+
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
