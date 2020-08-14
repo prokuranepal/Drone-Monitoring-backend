@@ -18,8 +18,8 @@ userRouter.post('/signup', cors.corsWithOptions, (req, res, next) => {
   User.register(new User({
     email: req.body.email,
     phonenumber: req.body.phone_number,
-    firstname: req.body.first_name,
-    lastname: req.body.last_name
+    // firstniame: req.body.first_name,
+    // lastname: req.body.last_name
   }), req.body.password, function (err, user) {
     if (err) {
       res.statusCode = 500;
@@ -58,7 +58,7 @@ userRouter.post('/signup', cors.corsWithOptions, (req, res, next) => {
   });
 });
 
-userRouter.post('/login', cors.corsWithOptions, (req, res, next) => {
+userRouter.post('/login', cors.cors, (req, res, next) => {
   passport.authenticate('local', (err, user, info) => {
     if (err) return next(err);
     if (!user) {
@@ -84,10 +84,13 @@ userRouter.post('/login', cors.corsWithOptions, (req, res, next) => {
       var token = authenticate.getToken({
         _id: req.user._id
       });
+      
+      console.log(token.exp);
 
-      res.statusCode = 401;
+      res.statusCode = 200;
       res.setHeader('Content-Type', 'application/json');
       return res.json({
+        userId:user.id,
         success: true,
         token: token,
         status: 'Login successful'

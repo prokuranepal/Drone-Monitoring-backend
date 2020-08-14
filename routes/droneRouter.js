@@ -65,6 +65,7 @@ droneRouter.route('/:droneId')
         res.end(`POST operation not supported /drone/${req.params.droneId}`);
     })
     .put(cors.cors, (req, res, next) => {
+        // Need to update mission list rather than overriding
         Drone.findByIdAndUpdate(req.params.droneId, {
                 $set: req.body
             }, {

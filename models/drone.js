@@ -16,33 +16,26 @@ const DroneSchema = new Schema({
         enum: ['VTOL', 'Plane', 'Quad', 'Octo', 'Hexa'],
         default: 'Quad'
     },
+    hospital: {
+        type:mongoose.Schema.Types.ObjectId,
+        ref: 'HealthFacilities'
+    },
     mission: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Mission'
     }],
-    healthpost: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'HealthPost'
-    },
-
 }, {
     timestamps: true
 });
 
-DroneSchema.statics.totalDroneCount = function () {
-    return this.countDocuments({});
-};
+DroneSchema.statics.getTotalHospitalDrone = async function(hospital_id) {
+    var totalDrone = await this.find({hospital:hospital_id}).exec();
+    return totalDrone.length;
+}
 
-DroneSchema.statics.flyingDroneCount = function () {
-    return this.countDocuments({
-        status: 'active'
-    });
-};
-
-DroneSchema.statics.destroyedDroneCount = function () {
-    return this.countDocuments({
-        status: 'destroyed'
-    });
-};
+DroneSchema.statics.getTotalHospitalFlyingDrone = async function(hospital_id) {
+    var totalDrone = await this.find({hospital:hospital_id,status:'active'}).exec();
+    return totalDrone.length;
+}
 
 module.exports = mongoose.model('Drone', DroneSchema);

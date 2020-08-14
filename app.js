@@ -11,6 +11,12 @@ var authenticate = require('./authenticate'); // authentication strategy defined
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/userRouter');
+var medicineRouter = require('./routes/medicineRouter');
+var healthPostRouter = require('./routes/healthPostRouter');
+var vaccineRouter = require('./routes/vaccineRouter');
+var suppliersRouter = require('./routes/suppliersRouter');
+var bloodRouter = require('./routes/bloodRouter');
+var orderRouter = require('./routes/orderRouter');
 var missionRouter = require('./routes/missionRouter');
 var droneRouter = require('./routes/droneRouter');
 var hospitalRouter = require('./routes/hospitalRouter');
@@ -43,6 +49,12 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/medicines', medicineRouter);
+app.use('/healthpost', healthPostRouter);
+app.use('/vaccine', vaccineRouter);
+app.use('/suppliers', suppliersRouter);
+app.use('/blood', bloodRouter);
+app.use('/orders', orderRouter);
 app.use('/mission', missionRouter);
 app.use('/drone', droneRouter);
 app.use('/hospital', hospitalRouter);
