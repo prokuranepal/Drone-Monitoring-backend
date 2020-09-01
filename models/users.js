@@ -18,10 +18,13 @@ var User = new Schema({
     },
     phonenumber: {
         type: String,
-        // min: '9800000000',
-        // max: '9899999999',
         required: true,
         unique: true
+    },
+    healthFacilities:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:'HealthFacilities',
+        required:true
     },
     admin: {
         type: Boolean,

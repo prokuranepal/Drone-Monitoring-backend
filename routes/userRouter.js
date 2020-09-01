@@ -15,11 +15,13 @@ userRouter.options('*', cors.corsWithOptions, (req, res) => {
 });
 
 userRouter.post('/signup', cors.corsWithOptions, (req, res, next) => {
+  console.log(req.body);
   User.register(new User({
     email: req.body.email,
     phonenumber: req.body.phone_number,
-    // firstniame: req.body.first_name,
-    // lastname: req.body.last_name
+    firstname: req.body.first_name,
+    lastname: req.body.last_name,
+    healthFacilities: req.body.health_facilities,
   }), req.body.password, function (err, user) {
     if (err) {
       res.statusCode = 500;
@@ -93,6 +95,7 @@ userRouter.post('/login', cors.cors, (req, res, next) => {
         userId:user.id,
         success: true,
         token: token,
+        expiresIn:3600,
         status: 'Login successful'
       });
     });
