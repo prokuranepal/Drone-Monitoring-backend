@@ -22,15 +22,32 @@ const MissionSchema = new Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'HealthFacilities'
     },
-    requested_item: {
-        type: String,
-        enum: ['medicine', 'vaccine', 'blood', 'none']
+    estimated_time: {
+        type: Number,
+        default:0
+        // required: true
     },
-    // TODO: Can be used to store mission file or complete mission
-    missionObject: {
-        type: String,
+    distance: {
+        type: Number,
+        default:0
+        // required: true
+    },
+    radius: {
+        type:Number,
         required: true
     },
+    speed: {
+        type:Number,
+        required:true
+    },
+    waypoints: {
+        type: Array,
+        required: true,
+    },
+    wb: {
+        type:Number,
+        required: true
+    }
 
 }, {
     timestamps: true
@@ -105,7 +122,7 @@ MissionSchema.statics.getGraphRHPSData = async function (hospital_id) {
         }
         healthost_list.push({
             name: healthpost.name,
-            data : data_list
+            data: data_list
         });
     }
 
