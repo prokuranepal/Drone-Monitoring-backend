@@ -21,6 +21,7 @@ var missionRouter = require('./routes/missionRouter');
 var droneRouter = require('./routes/droneRouter');
 var hospitalRouter = require('./routes/hospitalRouter');
 var dashboardRouter = require('./routes/dashboard');
+var placesRouter = require('./routes/placesRouter');
 
 var mongoose = require('mongoose'); // Mongoose to interact with mongodb database
 var mongoose_init = require('./models/db'); // Initialiation/connection with mongodb database
@@ -59,6 +60,7 @@ app.use('/mission', missionRouter);
 app.use('/drone', droneRouter);
 app.use('/hospital', hospitalRouter);
 app.use('/dashboard', dashboardRouter);
+app.use('/places', placesRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
