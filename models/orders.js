@@ -15,31 +15,52 @@ const OrderItemSchema = new mongoose.Schema({
 });
 
 const OrderSchema = new mongoose.Schema({
+    name:{
+        type:String,
+        required: true
+    },
     orderItem: [OrderItemSchema],
-    date_order: {
-        type: Date,
+    orderDate: {
+        type: String,
+        required: true
+    },
+    deliveryDate: {
+        type: String,
         required: true
     },
     origin: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'HealthFacilities',
         required: true
     },
-    created_User: {
+    user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     },
-    Destination: {
-        type: String,
+    destination: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'HealthFacilities',
         required: true
     },
     status: {
         type: String,
         enum: [
-            'complete',
-            'cancel',
-            'processing',
+            'completed',
+            'cancelled',
+            'in processing',
+            'delayed'
         ],
         default: 'processing'
+    },
+    orderLifeCycle:{
+        type: String,
+        enum: [
+            'Order Placed',
+            'Order Confirmed',
+            'Flight Confirmed',
+            'Order Received'
+        ],
+        default:'Order Placed'
     }
 }, {
     timestamps: true
