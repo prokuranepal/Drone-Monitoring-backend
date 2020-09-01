@@ -6,43 +6,54 @@ const authenticate = require('../authenticate');
 const cors = require('./cors');
 
 const Mission = require('../models/mission');
+const success_response = require('./functions/success_response');
 
 const missionRouter = express.Router();
 
 missionRouter.use(bodyParser.json());
 
 missionRouter.route('/')
-    .options(cors.corsWithOptions, (req, res) => {
+    .options(cors.corsWithOptions, authenticate.verifyUser, (req, res) => {
         res.sendStatus(200);
     })
-    .get(cors.cors, (req, res, next) => {
-        Mission.find({})
+    .get(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+        Mission.find({
+                hospital: req.user.healthFacilities
+            })
+            .populate({
+                path: "hospital",
+                select: "name location"
+            })
+            .populate({
+                path: "destination",
+                select: "name location"
+            })
+            .select("-waypoints")
             .then((missions) => {
-                res.statusCode = 200;
-                res.setHeader('Content-Type', 'application/json');
-                res.json(missions);
+                success_response(res, missions);
             }, (err) => next(err))
             .catch((err) => next(err));
     })
-    .post(cors.cors, (req, res, next) => {
+    .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+        console.log(req.body);
+        req.body.hospital = req.user.healthFacilities;
+        req.body.wb = (req.body.waypoints).length;
         Mission.create(req.body)
             .then((missions) => {
-                res.statusCode = 200;
-                res.setHeader('Content-Type', 'application/json');
-                res.json(missions);
+                success_response(res, missions);
             }, (err) => next(err))
             .catch((err) => next(err));
     })
-    .put(cors.cors, (req, res, next) => {
+    .put(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
         res.statusCode = 403;
         res.end(`PUT operation not supported /mission`);
     })
-    .delete(cors.cors, (req, res, next) => {
-        Mission.remove({})
+    .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+        Mission.remove({
+                hospital: req.user.healthFacilities
+            })
             .then((missions) => {
-                res.statusCode = 200;
-                res.setHeader('Content-Type', 'application/json');
-                res.json(missions);
+                success_response(res, missions);
             }, (err) => next(err))
             .catch((err) => next(err));
     });
@@ -51,37 +62,40 @@ missionRouter.route('/:missionId')
     .options(cors.corsWithOptions, (req, res) => {
         res.sendStatus(200);
     })
-    .get(cors.cors, (req, res, next) => {
+    .get(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
         Mission.findById(req.params.missionId)
+            .populate({
+                path: "hospital",
+                select: "name location"
+            })
+            .populate({
+                path: "destination",
+                select: "name location"
+            })
             .then((mission) => {
-                res.statusCode = 200;
-                res.setHeader('Content-Type', 'application/json');
-                res.json(mission);
+                success_response(res, mission);
             }, (err) => next(err))
             .catch((err) => next(err));
     })
-    .post(cors.cors, (req, res, next) => {
+    .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
         res.statusCode = 403;
         res.end(`POST operation not supported /mission/${req.params.missionId}`);
     })
-    .put(cors.cors, (req, res, next) => {
+    .put(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+        req.body.hospital = req.user.healthFacilities;
         Mission.findByIdAndUpdate(req.params.missionId, {
                 $set: req.body
             }, {
                 new: true
             }).then((mission) => {
-                res.statusCode = 200;
-                res.setHeader('Content-Type', 'application/json');
-                res.json(mission);
+                success_response(res, mission);
             }, (err) => next(err))
             .catch((err) => next(err));
     })
-    .delete(cors.cors, (req, res, next) => {
+    .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
         Mission.findByIdAndRemove(req.params.missionId)
             .then((mission) => {
-                res.statusCode = 200;
-                res.setHeader('Content-Type', 'application/json');
-                res.json(mission);
+                success_response(res, mission);
             }, (err) => next(err))
             .catch((err) => next(err));
     });

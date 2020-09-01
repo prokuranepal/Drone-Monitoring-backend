@@ -9,24 +9,33 @@ const DroneSchema = new Schema({
     status: {
         type: String,
         enum: ['active', 'unactive', 'destroyed'],
-        default: 'on home'
+        default: 'unactive'
     },
     type: {
         type: String,
         enum: ['VTOL', 'Plane', 'Quad', 'Octo', 'Hexa'],
         default: 'Quad'
     },
+    hospital: {
+        type:mongoose.Schema.Types.ObjectId,
+        ref: 'HealthFacilities'
+    },
     mission: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Mission'
     }],
-    healthpost: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'HealthPost'
-    },
-
 }, {
     timestamps: true
 });
+
+DroneSchema.statics.getTotalHospitalDrone = async function(hospital_id) {
+    var totalDrone = await this.find({hospital:hospital_id}).exec();
+    return totalDrone.length;
+}
+
+DroneSchema.statics.getTotalHospitalFlyingDrone = async function(hospital_id) {
+    var totalDrone = await this.find({hospital:hospital_id,status:'active'}).exec();
+    return totalDrone.length;
+}
 
 module.exports = mongoose.model('Drone', DroneSchema);
