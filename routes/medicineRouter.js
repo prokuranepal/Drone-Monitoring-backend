@@ -16,30 +16,35 @@ medicineRouter.route('/')
 	.options(cors.corsWithOptions, (req, res) => {
 		res.sendStatus(200);
 	})
-	.get(cors.cors, (req, res, next) => {
-		Medicines.find({})
-			.populate('user_added')
-			.populate('healthfacilities')
-			.populate('suppliers')
+	.get(cors.cors, authenticate.verifyUser, (req, res, next) => {
+		var query_object = {
+			healthFacilities:req.user.healthFacilities
+		}
+		if (req.query.type) {
+			query_object['type'] = (req.query.type).toLowerCase()
+		}
+		Medicines.find(query_object)
 			.then((medicines) => {
 				success_response(res, medicines);
 			}, (err) => next(err))
 			.catch((err) => next(err));
 	})
-	.post(cors.cors, (req, res, next) => {
+	.post(cors.cors, authenticate.verifyUser, (req, res, next) => {
+		req.body.user_added = req.user;
+		req.body.healthFacilities = req.user.healthFacilities;
 		Medicines.create(req.body)
 			.then((medicine) => {
 				success_response(res, medicine);
 			}, (err) => next(err))
 			.catch((err) => next(err));
 	})
-	.put(cors.cors, (req, res, next) => {
+	.put(cors.cors,authenticate.verifyUser, (req, res, next) => {
 		var error = new Error('PUT operation is not supported');
 		error.statusCode = 403;
 		next(error);
 	})
 	.delete(cors.cors, (req, res, next) => {
-		Medicines.remove({})
+		Medicines.remove({healthFacilities:req.user.healthFacilities})
 			.then((medicine) => {
 				message = {
 					status: true,
@@ -56,9 +61,10 @@ medicineRouter.route('/:medicineId')
 	})
 	.get(cors.cors, (req, res, next) => {
 		Medicines.findById(req.params.medicineId)
-			.populate('user_added')
-			.populate('healthfacilities')
-			.populate('suppliers')
+			.populate({
+				path:"user_added",
+				select:"firstname lastname"
+			})
 			.then((medicine) => {
 				success_response(res, medicine);
 			}, (err) => next(err))
@@ -69,7 +75,9 @@ medicineRouter.route('/:medicineId')
 		error.statusCode = 403;
 		next(error);
 	})
-	.put(cors.cors, (req, res, next) => {
+	.put(cors.cors,authenticate.verifyUser, (req, res, next) => {
+		req.body.user_added = req.user;
+		req.body.healthFacilities = req.user.healthFacilities;
 		Medicines.findByIdAndUpdate(req.params.medicineId, {
 				$set: req.body
 			}, {

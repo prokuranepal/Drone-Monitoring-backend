@@ -2,9 +2,13 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const Medicine = new Schema({
-    title: {
+    name: {
         type: String,
         required: true
+    },
+    dosage: {
+        type: String,
+        required:true,
     },
     quantity: {
         type: Number,
@@ -15,26 +19,14 @@ const Medicine = new Schema({
         type: String,
         default: ''
     },
-    man_date: {
-        type:Date,
-        required: true
-    },
     exp_date: {
-        type: Date,
-        required: true
-    },
-    image: {
         type: String,
-        default:''
+        required: true
     },
     price: {
         type:Number,
         default:0.0,
         min: 0.0
-    },
-    description: {
-        type:String,
-        default:''
     },
     type: {
         type: String,
@@ -47,13 +39,13 @@ const Medicine = new Schema({
     },
     healthFacilities:{
         type:mongoose.Schema.Types.ObjectId,
-        ref:'healthfacilities',
+        ref:'HealthFacilities',
         required:true
     },
     suppliers:{
         type: mongoose.Schema.Types.ObjectId,
         ref:'Suppliers',
-        required:true
+        // required:true
     }
 }, {
     timestamps: true
