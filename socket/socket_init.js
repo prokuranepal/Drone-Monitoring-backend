@@ -1,15 +1,12 @@
 module.exports = (io) => {
     const app = require('express');
     const router = app.Router();
-    // io.on('connection',(socket) => {console.log('Connected to socket');});
+    const Drone = require('../models/drone');
+    const User = require('../models/users');
 
-    const plane = io.of(/^\/JT\d+/);
-
-    plane.on('connect', (socket) => {
-        socket.on('joinPi', () => {
-            console.log('aa');
-        })
-    })
+    require('./dms')(io);
+    require('./drone')(io);
+    
 
     return router;
 }
