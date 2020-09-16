@@ -16,7 +16,7 @@ medicineRouter.route('/')
 	.options(cors.corsWithOptions, (req, res) => {
 		res.sendStatus(200);
 	})
-	.get(cors.cors, authenticate.verifyUser, (req, res, next) => {
+	.get(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
 		var query_object = {
 			healthFacilities:req.user.healthFacilities
 		}
@@ -29,7 +29,7 @@ medicineRouter.route('/')
 			}, (err) => next(err))
 			.catch((err) => next(err));
 	})
-	.post(cors.cors, authenticate.verifyUser, (req, res, next) => {
+	.post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
 		req.body.user_added = req.user;
 		req.body.healthFacilities = req.user.healthFacilities;
 		Medicines.create(req.body)
@@ -38,12 +38,12 @@ medicineRouter.route('/')
 			}, (err) => next(err))
 			.catch((err) => next(err));
 	})
-	.put(cors.cors,authenticate.verifyUser, (req, res, next) => {
+	.put(cors.corsWithOptions,authenticate.verifyUser, (req, res, next) => {
 		var error = new Error('PUT operation is not supported');
 		error.statusCode = 403;
 		next(error);
 	})
-	.delete(cors.cors, (req, res, next) => {
+	.delete(cors.corsWithOptions, (req, res, next) => {
 		Medicines.remove({healthFacilities:req.user.healthFacilities})
 			.then((medicine) => {
 				message = {
@@ -59,7 +59,7 @@ medicineRouter.route('/:medicineId')
 	.options(cors.corsWithOptions, (req, res) => {
 		res.sendStatus(200);
 	})
-	.get(cors.cors, (req, res, next) => {
+	.get(cors.corsWithOptions, (req, res, next) => {
 		Medicines.findById(req.params.medicineId)
 			.populate({
 				path:"user_added",
@@ -70,12 +70,12 @@ medicineRouter.route('/:medicineId')
 			}, (err) => next(err))
 			.catch((err) => next(err));
 	})
-	.post(cors.cors, (req, res, next) => {
+	.post(cors.corsWithOptions, (req, res, next) => {
 		var error = new Error('POST operation is not supported');
 		error.statusCode = 403;
 		next(error);
 	})
-	.put(cors.cors,authenticate.verifyUser, (req, res, next) => {
+	.put(cors.corsWithOptions,authenticate.verifyUser, (req, res, next) => {
 		req.body.user_added = req.user;
 		req.body.healthFacilities = req.user.healthFacilities;
 		Medicines.findByIdAndUpdate(req.params.medicineId, {
@@ -88,7 +88,7 @@ medicineRouter.route('/:medicineId')
 			}, (err) => next(err))
 			.catch((err) => next(err));
 	})
-	.delete(cors.cors, (req, res, next) => {
+	.delete(cors.corsWithOptions, (req, res, next) => {
 		Medicines.findByIdAndRemove(req.params.medicineId)
 			.then((medicine) => {
 				message = {

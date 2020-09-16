@@ -50,7 +50,7 @@ const OrderSchema = new mongoose.Schema({
             'in processing',
             'delayed'
         ],
-        default: 'processing'
+        default: 'in processing'
     },
     orderLifeCycle:{
         type: String,

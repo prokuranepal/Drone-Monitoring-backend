@@ -15,13 +15,23 @@ const Medicine = new Schema({
         min: 0,
         default: 0
     },
+    unit:{
+        type:Number,
+    },
+    class: {
+        type:String,
+    },
+    description: {
+        type:String,
+        default:""
+    },
     company: {
         type: String,
         default: ''
     },
     exp_date: {
         type: String,
-        required: true
+        // required: true
     },
     price: {
         type:Number,

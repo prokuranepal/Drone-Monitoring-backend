@@ -54,6 +54,12 @@ HealthFacilitiesSchema.statics.getTotalHospitalHealthPost = async function(hospi
     return totalHealthPost.length;
 }
 
+HealthFacilitiesSchema.statics.getHealthPostByHospital = async function(hospital_id) {
+    var totalHealthPost = await this.find({hospital:hospital_id}).exec();
+    return totalHealthPost;
+}
+
+
 HealthFacilitiesSchema.statics.getgraphdata = async function(hospital_id) {
     var hospital = await this.findById(hospital_id).populate({
         path:'mission',
