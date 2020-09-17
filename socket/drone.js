@@ -23,9 +23,9 @@ module.exports = (io) => {
                         .then((data) => {
                             if (!data) throw data;
                             droneMessage = {
-                                drone: droneName,
+                                message: droneName,
                                 status: 1,
-                                joinedDate: new Date()
+                                date: new Date()
                             };
                             socket.join('drone');
                             data.status = 1;
@@ -54,22 +54,22 @@ module.exports = (io) => {
                 .catch((err) => socket.emit('notifications', "drone dms KO"));
         });
 
-        socket.on('mission', (missionId) => {
-            console.log("Mission : ",missionId);
+        socket.on('mission', (mission) => {
+            console.log("Mission : ",mission);
             console.log("Mission socket id : ",socket.id);
 
             actualSocket.in('drone').clients((error,clients) => {
                 if (error) throw error;
                 if (clients.includes(socket.id)){
-                    actualSocket.to('dms').emit('mission',missionId);
+                    actualSocket.to('dms').emit('mission',mission);
                 }
             });
             actualSocket.in('dms').clients((error,clients) => {
                 if (error) throw error;
                 if (clients.includes(socket.id)) {
-                    Mission.findById(missionId).exec()
-                        .then((mission) => {
-                            actualSocket.to('drone').emit('mission',mission);
+                    Mission.findById(mission.mission).exec()
+                        .then((mission_object) => {
+                            actualSocket.to('drone').emit('mission',{mission:mission_object,timestamp:mission.timestamp});
                         })
                         .catch((err) => console.log('mission not found'));
                 }
