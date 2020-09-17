@@ -11,8 +11,13 @@ module.exports = (io) => {
                 .then((data) => {
                     if (!data) throw data;
                     socket.join('dms');
-                    socket.emit("notifications", "base dms OK");
-                    createDMSEvent(`Base DMS with user id ${userid} Connected`, "OK", "dms", "x");
+                    message = {
+                        message:`Base DMS connected with user id ${userid}`,
+                        status:1,
+                        date: new Date()
+                    };
+                    socket.emit("notifications", message);
+                    createDMSEvent(message, "OK", "dms", "x");
                 })
                 .catch((err) => socket.emit("notifications", "base dms KO"));
         });

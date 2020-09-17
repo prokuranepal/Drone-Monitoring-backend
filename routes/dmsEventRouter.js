@@ -17,7 +17,9 @@ dmseventRouter.route('/')
         res.sendStatus(200);
     })
     .get(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
-        DMSEvent.find({}).sort('createdAt','-1').limit(20)
+        DMSEvent.find({}).sort({
+                createdAt: -1
+            }).limit(20)
             .then((dmsevent) => {
                 success_response(res, dmsevent);
             }, (err) => next(err))
