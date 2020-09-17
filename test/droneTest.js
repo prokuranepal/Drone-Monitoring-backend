@@ -1,133 +1,141 @@
-process.env.NODE_ENV = 'test';
-
+const {
+    request,
+    loginWithDefaultUser,
+    getMainHospital,
+    chai
+} = require("./common.test");
 let Drone = require('../models/drone');
-var chai = require('chai');
-var server = require('../app');
-var chaiHTTP = require('chai-http');
+// var chai = require('chai');
+// var server = require('../app');
+// var chaiHTTP = require('chai-http');
 var should = chai.should();
-
-chai.use(chaiHTTP);
+// chai.use(chaiHTTP);
 
 describe('Drone Request Test', () => {
+    let token;
+    let hospital_id;
+    let drone = {
+        droneId:"215",
+        name: "spoiler66",
+        status: 1,
+        type: 1
+    };
+
+    before(async () => {
+        let hospital = await getMainHospital();
+        hospital_id = hospital._id;
+        let resToken = await loginWithDefaultUser();
+        token = resToken.body.token;
+        drone.hospital = hospital_id; 
+    });
+
     describe('Request on /drone', function () {
-        let drone = {
-            name: "spoiler66",
-            status: "active",
-            type: 'Plane'
-        };
 
-        let drone_data = null;
-        before((done) => {
-            Drone(drone).save().then((data) => {
-                drone_data = data;
-                done();
-            });
+        let drone_data;
+
+        before(async () => {
+            drone_data = await Drone(drone).save();
         });
 
 
-        after((done) => {
-            Drone.collection.drop();
-            done();
+        after(async () => {
+            await Drone.collection.drop();
         });
 
-        it('It should GET all the records in the drone', (done) => {
-            chai.request(server)
-                .get('/drone')
-                .end((err, res) => {
-                    res.should.have.status(200);
+        it('It should GET all the records in the drone', () => {
+            return request.get('/drones')
+                .set("Authorization", `Bearer ${token}`)
+                .expect(200)
+                .expect(res => {
                     res.body.should.be.a('array');
                     res.body.length.should.be.eq(1);
-                    done();
                 });
         });
 
-        it('it should  POST drone information', (done) => {
+        it('it should  POST drone information', () => {
             const drone_new = {
+                droneId: "213",
                 name: "hollow94",
-                status: 'unactive',
-                type: "VTOL"
+                status: 0,
+                type: 2,
+                hospital: hospital_id
             };
-            chai.request(server)
-                .post('/drone')
+            return request
+                .post('/drones')
+                .set("Authorization", `Bearer ${token}`)
                 .send(drone_new)
-                .end((err, res) => {
-                    res.should.have.status(200);
+                .expect(200)
+                .expect(res => {
                     res.body.should.be.a('object');
                     res.body.should.have.property('name');
                     res.body.should.have.property('status');
                     res.body.should.have.property('type');
-                    done();
                 });
         });
 
-        it('It should DELETE all the records in the drone', (done) => {
-            chai.request(server)
-                .delete('/drone')
-                .end((err, res) => {
-                    res.should.have.status(200);
-                    done();
+        it('It should DELETE all the records in the drone', () => {
+            return request
+                .delete('/drones')
+                .set("Authorization", `Bearer ${token}`)
+                .expect(200)
+                .expect(res => {
+                    res.body.msg.should.equal('Successfully Deleted');
+                    res.body.status.should.equal('OK');
                 });
         });
     });
 
 
     describe('Request on /drone/id', function () {
-        let drone = {
-            name: "spoiler66",
-            status: "active",
-            type: 'Plane'
-        };
-
+       
         let drone_data = null;
-        before((done) => {
-            Drone(drone).save().then((data) => {
-                drone_data = data;
-                done();
-            });
-        });
-        after((done) => {
-            Drone.collection.drop();
-            done();
+
+        before(async () => {
+            drone_data = await Drone(drone).save();
         });
 
+        after(async () => {
+            await Drone.collection.drop();
+        });
 
-
-        it('it should GET information about drone by the given id', (done) => {
-            chai.request(server)
-                .get(`/drone/${drone_data._id}`)
-                .end((err, res) => {
-                    res.should.have.status(200);
+        it('it should GET information about drone by the given id', () => {
+            return request
+                .get(`/drones/${drone_data._id}`)
+                .set("Authorization", `Bearer ${token}`)
+                .expect(200)
+                .expect(res => {
                     res.body.should.be.a('object');
                     res.body.should.have.property('name');
                     res.body.should.have.property('status');
                     res.body.should.have.property('type');
-                    res.body._id.should.equal(drone_data._id.toString());
-                    done();
+                    res.body._id.should.equal(drone_data._id.toString())
                 });
         });
 
-        it('it should UPDATE information of drone given the id', (done) => {
+        it('it should UPDATE information of drone given the id', () => {
             let drone_update = {
-                status: 'destroyed'
+                status: 2
             };
-            chai.request(server)
-                .put(`/drone/${drone_data._id}`)
+            return request
+                .put(`/drones/${drone_data._id}`)
+                .set("Authorization", `Bearer ${token}`)
                 .send(drone_update)
-                .end((err, res) => {
-                    res.should.have.status(200);
+                .expect(200)
+                .expect(res => {
                     res.body.should.be.a('object');
                     res.body.status.should.equal(drone_update.status);
-                    done();
                 });
 
         });
 
-        it('It should DELETE all the records in the drone according to id', (done) => {
-            chai.request(server)
-                .delete(`/drone/${drone_data._id}`)
-                .end((err, res) => {
-                    res.should.have.status(200);
-                    done();
+        it('It should DELETE all the records in the drone according to id', () => {
+            return request
+                .delete(`/drones/${drone_data._id}`)
+                .set("Authorization", `Bearer ${token}`)
+                .expect(200)
+                .expect(res => {
+                    res.body.msg.should.equal('Successfully Deleted');
+                    res.body.status.should.equal('OK');
                 });
 
         });
