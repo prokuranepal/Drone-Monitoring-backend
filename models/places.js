@@ -8,8 +8,8 @@ const PlacesSchema = new mongoose.Schema({
     gps_location: {
         'type': {
             type: String,
-            required: true,
-            enum: ['Point']
+            enum: ['Point'],
+            default: "Point"
         },
         coordinates: [Number],
         select: false

@@ -40,8 +40,6 @@ userRouter.route('/')
     });
   })
   .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
-    console.log(req.body);
-    console.log(req.user);
     User.register(new User({
       email: req.body.email,
       phonenumber: req.body.phoneNumber,
@@ -85,7 +83,6 @@ userRouter.route('/')
   });
 
 userRouter.post('/signup', cors.corsWithOptions, (req, res, next) => {
-  console.log(req.body);
   User.register(new User({
     email: req.body.email,
     phonenumber: req.body.phone_number,
