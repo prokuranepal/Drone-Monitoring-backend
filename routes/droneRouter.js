@@ -75,7 +75,6 @@ droneRouter.route('/:droneId')
         res.end(`POST operation not supported /drone/${req.params.droneId}`);
     })
     .put(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
-        console.log(req.body);
         req.body.hospital = req.user.healthFacilities;
         Drone.findByIdAndUpdate(req.params.droneId, {
                 $set: req.body

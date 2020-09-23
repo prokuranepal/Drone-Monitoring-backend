@@ -70,7 +70,6 @@ HealthFacilitiesSchema.statics.getgraphdata = async function(hospital_id) {
         sort: 'updatedAt'
     }).select('mission').exec();
     var data_array = {};
-    console.log(hospital);
     // for (mission of hospital.mission) {
     //     // data_array[mission.createdAt.getYear()].append
     // }

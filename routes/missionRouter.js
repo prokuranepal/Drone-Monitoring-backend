@@ -35,7 +35,6 @@ missionRouter.route('/')
             .catch((err) => next(err));
     })
     .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
-        console.log(req.body);
         req.body.hospital = req.user.healthFacilities;
         req.body.wb = (req.body.waypoints).length;
         Mission.create(req.body)

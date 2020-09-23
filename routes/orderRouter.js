@@ -55,8 +55,8 @@ orderRouter.route('/')
         Orders.remove({})
             .then((order) => {
                 message = {
-                    status: true,
-                    message: 'Successfully deleted'
+                    status: 'OK',
+                    msg: 'Successfully Deleted'
                 };
                 success_response(res, message);
             }, (err) => next(err))
@@ -86,7 +86,6 @@ orderRouter.route('/:orderId')
             .catch((err) => next(err));
     })
     .put(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
-        console.log(req.body);
         var update_value = {};
         if (req.body.status) {
             update_value.status = req.body.status;
@@ -106,9 +105,9 @@ orderRouter.route('/:orderId')
     .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
         Orders.findByIdAndRemove(req.params.orderId)
             .then((order) => {
-                message = {
-                    status: true,
-                    message: 'Successfully deleted'
+                let message = {
+                    status: 'OK',
+                    msg: 'Successfully Deleted'
                 };
                 success_response(res, message);
             }, (err) => next(err))
@@ -116,13 +115,10 @@ orderRouter.route('/:orderId')
     });
 
 orderRouter.route('/:orderId/cancel')
-    .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+    .put(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
         const order = Orders.findById(req.params.orderId)
             .then((order) => {
-                if (!order) {
-                    res.status(404).send();
-                }
-                order.status = 'cancel';
+                order.status = 'cancelled';
                 order.save();
                 success_response(res, order);
             }, (err) => next(err))

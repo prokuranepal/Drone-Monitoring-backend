@@ -43,7 +43,11 @@ placesRouter.route('/')
                 healthFacilities: req.user.healthFacilities
             })
             .then((places) => {
-                success_response(res, places);
+                let message = {
+                    status: "OK",
+                    msg:"Successfully Deleted"
+                }
+                success_response(res, message);
             }, (err) => next(err))
             .catch((err) => next(err));
     });
@@ -77,7 +81,11 @@ placesRouter.route('/:placesId')
     .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
         Places.findByIdAndRemove(req.params.placesId)
             .then((places) => {
-                success_response(res, places);
+                let message = {
+                    status: "OK",
+                    msg:"Successfully Deleted"
+                }
+                success_response(res, message);
             }, (err) => next(err))
             .catch((err) => next(err));
     });
