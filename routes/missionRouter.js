@@ -13,7 +13,7 @@ const missionRouter = express.Router();
 missionRouter.use(bodyParser.json());
 
 missionRouter.route('/')
-    .options(cors.corsWithOptions, authenticate.verifyUser, (req, res) => {
+    .options(cors.corsWithOptions, (req, res) => {
         res.sendStatus(200);
     })
     .get(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
@@ -53,7 +53,11 @@ missionRouter.route('/')
                 hospital: req.user.healthFacilities
             })
             .then((missions) => {
-                success_response(res, missions);
+                let message = {
+                    msg: 'Successfully Deleted',
+                    status: 'OK'
+                };
+                success_response(res, message);
             }, (err) => next(err))
             .catch((err) => next(err));
     });
@@ -95,7 +99,11 @@ missionRouter.route('/:missionId')
     .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
         Mission.findByIdAndRemove(req.params.missionId)
             .then((mission) => {
-                success_response(res, mission);
+                let message = {
+                    msg: 'Successfully Deleted',
+                    status: 'OK'
+                };
+                success_response(res, message);
             }, (err) => next(err))
             .catch((err) => next(err));
     });

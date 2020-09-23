@@ -38,8 +38,8 @@ healthPostRouter.route('/')
       })
       .then((healthPost) => {
         message = {
-          status: true,
-          message: 'Successfully deleted'
+          status: 'OK',
+          msg: 'Successfully Deleted'
         };
         success_response(res, message);
       }, (err) => next(err))
@@ -79,8 +79,8 @@ healthPostRouter.route('/:healthpostId')
     Healthpost.findOneAndRemove({_id:req.params.healthpostId,type:'healthpost'})
       .then((healthPost) => {
         message = {
-          status: true,
-          message: 'Successfully deleted'
+          status: 'OK',
+          msg: 'Successfully Deleted'
         };
         success_response(res, message);
       }, (err) => next(err))

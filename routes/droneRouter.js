@@ -50,7 +50,7 @@ droneRouter.route('/')
                 hospital: req.user.healthFacilities
             })
             .then((drones) => {
-                message = {
+                let message = {
                     msg: 'Successfully Deleted',
                     status: 'OK'
                 };
@@ -89,7 +89,7 @@ droneRouter.route('/:droneId')
     .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
         Drone.findByIdAndRemove(req.params.droneId)
             .then((drone) => {
-                message = {
+                let message = {
                     msg: 'Successfully Deleted',
                     status: 'OK'
                 };
