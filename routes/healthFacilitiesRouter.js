@@ -20,7 +20,7 @@ healthFacilitiesRouter.route('/')
     .get(cors.corsWithOptions, authenticate.verifyUser, async (req, res, next) => {
         let healthFacilities = [];
         healthFacilities.push(...await HealthFacilities.getHealthPostByHospital(req.user.healthFacilities._id));
-        healthFacilities.push(await HealthFacilities.getHospitalByUser(req.user));
+        healthFacilities.push(await HealthFacilities.getHospitalByUser(req.user.healthFacilities));
         success_response(res, healthFacilities);
     });
     

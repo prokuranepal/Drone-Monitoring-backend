@@ -39,8 +39,8 @@ const HealthFacilitiesSchema = new mongoose.Schema({
     timestamps: true
 });
 
-HealthFacilitiesSchema.statics.getHospitalByUser = async function(user_id) {
-    var hospital = await this.findOne({employee:user_id,type:'hospital'}).exec();
+HealthFacilitiesSchema.statics.getHospitalByUser = async function(healthFacilities_id) {
+    var hospital = await this.findOne({_id:healthFacilities_id, type:"hospital"}).exec();
     return hospital;
 }
 
@@ -50,12 +50,12 @@ HealthFacilitiesSchema.statics.getHospitalByHealthpost = async function(healthpo
 }
 
 HealthFacilitiesSchema.statics.getTotalHospitalHealthPost = async function(hospital_id) {
-    var totalHealthPost = await this.find({hospital:hospital_id}).exec();
+    var totalHealthPost = await this.find({hospital:hospital_id,type:"healthpost"}).exec();
     return totalHealthPost.length;
 }
 
 HealthFacilitiesSchema.statics.getHealthPostByHospital = async function(hospital_id) {
-    var totalHealthPost = await this.find({hospital:hospital_id}).exec();
+    var totalHealthPost = await this.find({hospital:hospital_id,type:"healthpost"}).exec();
     return totalHealthPost;
 }
 
