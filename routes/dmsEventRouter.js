@@ -40,7 +40,11 @@ dmseventRouter.route('/')
     .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
         DMSEvent.remove({})
             .then((dmsevent) => {
-                success_response(res, dmsevent);
+                let message = {
+                    msg: 'Successfully Deleted',
+                    status: 'OK'
+                };
+                success_response(res, message);
             }, (err) => next(err))
             .catch((err) => next(err));
     });
@@ -73,7 +77,11 @@ dmseventRouter.route('/:dmseventId')
     .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
         DMSEvent.findByIdAndRemove(req.params.dmseventId)
             .then((dmsevent) => {
-                success_response(res, dmsevent);
+                let message = {
+                    msg: 'Successfully Deleted',
+                    status: 'OK'
+                };
+                success_response(res, message);
             }, (err) => next(err))
             .catch((err) => next(err));
     });

@@ -18,7 +18,7 @@ dashboardRouter.route('/')
         res.sendStatus(200);
     })
     .get(cors.cors, authenticate.verifyUser,async (req, res, next) => {
-        var hospital = await HealthFacilities.getHospitalByUser(req.user._id);
+        var hospital = await HealthFacilities.getHospitalByUser(req.user.healthFacilities);
         if (hospital){
             hospitalId = hospital._id;
         } else {
