@@ -21,11 +21,11 @@ const OrderSchema = new mongoose.Schema({
     },
     orderItem: [OrderItemSchema],
     orderDate: {
-        type: String,
+        type: Date,
         required: true
     },
     deliveryDate: {
-        type: String,
+        type: Date,
         required: true
     },
     origin: {

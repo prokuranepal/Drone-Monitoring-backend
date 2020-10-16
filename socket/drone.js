@@ -10,10 +10,10 @@ module.exports = (io) => {
     drone.on('connection', (socket) => {
         let actualSocket = socket.nsp;
         const droneName = socket.nsp.name.replace('/', '');
-        console.log("socket id drone : ", socket.id);
-
+        console.log("Socket in JT601: ",socket.id);
         // Joins the drone to the room and also make the status 1 - Active
         socket.on('joinDrone', () => {
+            console.log(`socket of drone ${droneName} : ${socket.id}`);
             actualSocket.to('drone').clients((error, clients) => {
                 if (error) throw error;
                 if (clients.length == 0) {
@@ -42,7 +42,7 @@ module.exports = (io) => {
         });
 
         socket.on('joinDMS', (userid) => {
-            console.log(socket.id);
+            console.log(`socket of joinDMS ${droneName} : ${socket.id} : ${userid}`);
             User.findById(userid).exec()
                 .then((data) => {
                     if (!data) throw data;

@@ -33,7 +33,7 @@ var app = express();
 // Socket.io initialized
 const io = socket_io();
 app.io = io;
-const socket_init = require('./socket/socket_init')(io);
+require('./socket/socket_init')(io);
 
 
 // view engine setup
@@ -57,7 +57,7 @@ app.use('/healthpost', healthPostRouter);
 app.use('/vaccine', vaccineRouter);
 app.use('/suppliers', suppliersRouter);
 app.use('/blood', bloodRouter);
-app.use('/orders', orderRouter);
+app.use('/orders', orderRouter(io));
 app.use('/mission', missionRouter);
 app.use('/drones', droneRouter);
 app.use('/hospital', hospitalRouter);
