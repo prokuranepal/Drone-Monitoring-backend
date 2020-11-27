@@ -2,6 +2,8 @@ module.exports = (io) => {
     const app = require('express');
     const router = app.Router();
     const Drone = require('../models/drone');
+    const Flight = require('../models/flight');
+    const DroneData = require('../models/droneData');
     const User = require('../models/users');
     const Mission = require('../models/mission');
     const drone = io.of(/^\/JT\d+/);
@@ -10,7 +12,8 @@ module.exports = (io) => {
     drone.on('connection', (socket) => {
         let actualSocket = socket.nsp;
         const droneName = socket.nsp.name.replace('/', '');
-        console.log("Socket in JT601: ",socket.id);
+
+        console.log(`Socket in ${droneName}: ${socket.id}`);
         // Joins the drone to the room and also make the status 1 - Active
         socket.on('joinDrone', () => {
             console.log(`socket of drone ${droneName} : ${socket.id}`);
@@ -20,7 +23,7 @@ module.exports = (io) => {
                     Drone.findOne({
                             droneId: droneName
                         }).exec()
-                        .then((data) => {
+                        .then(async (data) => {
                             if (!data) throw data;
                             droneMessage = {
                                 message: droneName,
@@ -29,10 +32,15 @@ module.exports = (io) => {
                             };
                             socket.join('drone');
                             data.status = 1;
-                            data.save();
+                            data.save().catch((err) => console.log("Drone status update error"));
+                            var flight = new Flight({
+                                onTime: Date.now(),
+                                drone: data._id
+                            });
+                            flight.save().catch((err) => console.log("Flight save error"));
                             io.to('dms').emit('notifications', droneMessage);
                             socket.emit('drone-conn', 'OK');
-                            createDMSEvent(droneMessage,'OK','dms','drone');
+                            createDMSEvent(droneMessage, 'OK', 'dms', 'drone');
                         })
                         .catch((err) => socket.emit('drone-status', 'KO'));
                 } else {
@@ -48,28 +56,44 @@ module.exports = (io) => {
                     if (!data) throw data;
                     socket.join('dms');
                     socket.emit('notifications', "drone dms OK");
-                    actualSocket.to('drone').emit('homePosition',"send");
-                    createDMSEvent(`Base DMS with user id ${userid} Connected to drone ${droneName}`,'OK','dms','x');
+                    actualSocket.to('drone').emit('homePosition', "send");
+                    createDMSEvent(`Base DMS with user id ${userid} Connected to drone ${droneName}`, 'OK', 'dms', 'x');
                 })
                 .catch((err) => socket.emit('notifications', "drone dms KO"));
         });
 
         socket.on('mission', (mission) => {
-            console.log("Mission : ",mission);
-            console.log("Mission socket id : ",socket.id);
+            console.log("Mission : ", mission);
+            console.log("Mission socket id : ", socket.id);
 
-            actualSocket.in('drone').clients((error,clients) => {
+            actualSocket.in('drone').clients((error, clients) => {
                 if (error) throw error;
-                if (clients.includes(socket.id)){
-                    actualSocket.to('dms').emit('mission',mission);
+                if (clients.includes(socket.id)) {
+                    actualSocket.to('dms').emit('mission', mission);
                 }
             });
-            actualSocket.in('dms').clients((error,clients) => {
+            actualSocket.in('dms').clients((error, clients) => {
                 if (error) throw error;
                 if (clients.includes(socket.id)) {
                     Mission.findById(mission.mission).exec()
-                        .then((mission_object) => {
-                            actualSocket.to('drone').emit('mission',{mission:mission_object,timestamp:mission.timestamp});
+                        .then(async (mission_object) => {
+                            actualSocket.to('drone').emit('mission', {
+                                mission: mission_object,
+                                timestamp: mission.timestamp
+                            });
+                            const drone = await Drone.findOne({
+                                droneId: droneName
+                            }).exec();
+                            const all_flight_drone = await Flight.find({
+                                drone: drone._id
+                            }).exec();
+                            const last_flight_drone = all_flight_drone[all_flight_drone.length-1];
+                            Flight.findById(last_flight_drone._id)
+                                .then(async (flightData) => {
+                                    if (!flightData) throw "No flight data";
+                                    flightData.mission = mission.mission;
+                                    await flightData.save();
+                                })
                         })
                         .catch((err) => console.log('mission not found'));
                 }
@@ -78,18 +102,18 @@ module.exports = (io) => {
 
         socket.on('getMission', (mission) => {
             console.log("get Mission : ", mission);
-            console.log("socket id : ",socket.id);
+            console.log("socket id : ", socket.id);
 
-            actualSocket.in('drone').clients((error,clients) => {
+            actualSocket.in('drone').clients((error, clients) => {
                 if (error) throw error;
-                if (clients.includes(socket.id)){
-                    actualSocket.to('dms').emit('getMission',mission);
+                if (clients.includes(socket.id)) {
+                    actualSocket.to('dms').emit('getMission', mission);
                 }
             });
-            actualSocket.in('dms').clients((error,clients) => {
+            actualSocket.in('dms').clients((error, clients) => {
                 if (error) throw error;
-                if (clients.includes(socket.id)){
-                    actualSocket.to('drone').emit('getMission',mission);
+                if (clients.includes(socket.id)) {
+                    actualSocket.to('drone').emit('getMission', mission);
                 }
             });
         });
@@ -97,26 +121,26 @@ module.exports = (io) => {
         socket.on('initiateFlight', (fly) => {
             console.log(fly);
             console.log(socket.id);
-            actualSocket.in('drone').clients((error,clients) => {
-                if (error) throw error;
-                if (clients.includes(socket.id)){
-                    actualSocket.to('dms').emit('initiateFlight',fly);
-                }
-            });
-            actualSocket.in('dms').clients((error,clients) => {
+            actualSocket.in('drone').clients((error, clients) => {
                 if (error) throw error;
                 if (clients.includes(socket.id)) {
-                    actualSocket.to('drone').emit('initiateFlight',fly);
+                    actualSocket.to('dms').emit('initiateFlight', fly);
+                }
+            });
+            actualSocket.in('dms').clients((error, clients) => {
+                if (error) throw error;
+                if (clients.includes(socket.id)) {
+                    actualSocket.to('drone').emit('initiateFlight', fly);
                 }
             });
         });
 
-        socket.on('homePosition',(homePosition) => {
+        socket.on('homePosition', (homePosition) => {
             console.log(homePosition);
-            actualSocket.in('drone').clients((error,clients) => {
+            actualSocket.in('drone').clients((error, clients) => {
                 if (error) throw error;
-                if (clients.includes(socket.id)){
-                    actualSocket.to('dms').emit('homePosition',homePosition);
+                if (clients.includes(socket.id)) {
+                    actualSocket.to('dms').emit('homePosition', homePosition);
                 }
             });
         });
@@ -129,7 +153,7 @@ module.exports = (io) => {
                 }
             })
         });
-        
+
         socket.on('rtl', (rtl) => {
             actualSocket.in('dms').clients((error, clients) => {
                 if (error) throw error;
@@ -140,12 +164,34 @@ module.exports = (io) => {
         });
 
         socket.on('data', (data) => {
-            actualSocket.in('drone').clients((error, clients) => {
+            actualSocket.in('drone').clients(async (error, clients) => {
                 if (error) throw error;
                 if (clients.includes(socket.id)) {
                     actualSocket.to('dms').emit('copter-data', data);
+                    const drone = await Drone.findOne({
+                        droneId: droneName
+                    }).exec();
+                    const all_flight_drone = await Flight.find({
+                        drone: drone._id
+                    }).exec();
+                    const last_flight_drone = all_flight_drone[all_flight_drone.length-1];
+                    data['droneMission'] = last_flight_drone._id
+                    let dronedata = new DroneData(data);
+                    dronedata.save().catch((err) => console.log(`Error in dta save`));
+                    Flight.findById(last_flight_drone._id)
+                        .then(async (flightData) => {
+                            if (!flightData) throw "No flight data";
+                            // TODO: data['status']=='ARMED' condition is needed
+                            if (!flightData.startTime && data['mode'] == "AUTO") {
+                                flightData.startTime = Date.now();
+                                await flightData.save();
+                            } else if (!flightData.endTime && data['mode']== "LAND") {
+                                flightData.endTime = Date.now();
+                                await flightData.save();
+                            }
+                        })
                 } else {
-                    socket.emit('drone-status',"KO");
+                    socket.emit('drone-status', "KO");
                 }
             });
         });
@@ -164,26 +210,36 @@ module.exports = (io) => {
         });
 
         socket.on('disconnect', () => {
-            actualSocket.in('drone').clients((error,clients) => {
+            actualSocket.in('drone').clients((error, clients) => {
                 if (error) throw error;
-                if (clients.length === 0){
+                if (clients.length === 0) {
                     Drone.findOne({
-                        droneId: droneName
-                    }).exec()
-                    .then((data) => {
-                        if (!data) throw data;
-                        droneMessage = {
-                            drone: droneName,
-                            status: 0,
-                            disconnected: new Date()
-                        };
-                        data.status = 0;
-                        data.save();
-                        io.to('dms').emit('notifications', droneMessage);
-                        console.log(`${droneName} drone with socket id ${socket.id} is disconnected`);
-                        createDMSEvent(droneMessage,'OK','dms','drone');
-                    })
-                    .catch((err) => console.log(`Error in db wirte ${droneName} drone with socket id ${socket.id} is disconnected`));
+                            droneId: droneName
+                        }).exec()
+                        .then(async (data) => {
+                            if (!data) throw data;
+                            droneMessage = {
+                                drone: droneName,
+                                status: 0,
+                                disconnected: new Date()
+                            };
+                            data.status = 0;
+                            data.save();
+                            const all_flight_drone = await Flight.find({
+                                drone: data._id
+                            }).exec();
+                            const last_flight_drone = all_flight_drone[all_flight_drone.length-1];
+                            Flight.findById(last_flight_drone._id)
+                                .then(async (flightData) => {
+                                    if (!flightData) throw "No flight data";
+                                    flightData.offTime = Date.now();
+                                    await flightData.save();
+                                })
+                            io.to('dms').emit('notifications', droneMessage);
+                            console.log(`${droneName} drone with socket id ${socket.id} is disconnected`);
+                            createDMSEvent(droneMessage, 'OK', 'dms', 'drone');
+                        })
+                        .catch((err) => console.log(`Error in db wirte ${droneName} drone with socket id ${socket.id} is disconnected`));
                 }
             });
         });

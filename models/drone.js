@@ -1,6 +1,28 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
+// const DroneMissionSchema = new mongoose.Schema({
+//     mission: {
+//         type:mongoose.Schema.Types.ObjectId,
+//         ref: 'Mission',
+//         default: mongoose.Types.ObjectId()
+//     },
+//     startTime: {
+//         type: Date
+//     },
+//     endTime: {
+//         type: Date
+//     },
+//     onTime: {
+//         type: Date
+//     },
+//     offTime: {
+//         type: Date
+//     }
+// }, {
+//     timestamps: true
+// });
+
 const DroneSchema = new Schema({
     droneId: {
         type: String,
@@ -28,10 +50,11 @@ const DroneSchema = new Schema({
         type: Number,
         default: 0
     },
-    mission: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Mission'
-    }],
+    flightTime: {
+        type: Number,
+        default: 0
+    },
+    // mission: [DroneMissionSchema],
 }, {
     timestamps: true
 });

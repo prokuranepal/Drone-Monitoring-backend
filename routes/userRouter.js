@@ -215,7 +215,7 @@ userRouter.post('/token', cors.corsWithOptions, (req, res, next) => {
       res.statusCode = 200;
       res.setHeader('Content-Type', 'application/json');
       return res.json({
-        userId: user.id,
+        userId: user._id,
         success: true,
         token: token,
         expiresIn: 3600,

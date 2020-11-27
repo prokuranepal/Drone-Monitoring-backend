@@ -24,6 +24,9 @@ var dashboardRouter = require('./routes/dashboard');
 var placesRouter = require('./routes/placesRouter');
 var healthFacilitiesRouter = require('./routes/healthFacilitiesRouter');
 var dmsEventRouter = require('./routes/dmsEventRouter');
+var flitghtRouter = require('./routes/flightRouter');
+//Test route
+var {droneDataRouter,flightDataRouter} = require('./routes/dronedataRouter');
 
 var mongoose = require('mongoose'); // Mongoose to interact with mongodb database
 var mongoose_init = require('./models/db'); // Initialiation/connection with mongodb database
@@ -65,6 +68,10 @@ app.use('/dashboard', dashboardRouter);
 app.use('/places', placesRouter);
 app.use('/healthFacilities', healthFacilitiesRouter);
 app.use('/dmsevent', dmsEventRouter);
+app.use('/flights',flitghtRouter);
+//Test route
+app.use('/dronedata', droneDataRouter);
+// app.use('/flights', flightDataRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
