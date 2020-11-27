@@ -13,7 +13,7 @@ healthPostRouter.route('/')
   .options(cors.corsWithOptions, (req, res) => {
     res.sendStatus(200);
   })
-  .get(cors.corsWithOptions,authenticate.verifyUser, (req, res, next) => {
+  .get(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
     Healthpost.find({
         type: 'healthpost',
         hospital: req.user.healthFacilities
@@ -23,8 +23,9 @@ healthPostRouter.route('/')
       }, (err) => next(err))
       .catch((err) => next(err));
   })
-  .post(cors.corsWithOptions,authenticate.verifyUser, (req, res, next) => {
+  .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
     req.body.type = 'healthpost';
+    req.body.hospital = req.user.healthFacilities;
     req.body.healthpost = [];
     Healthpost.create(req.body)
       .then((healthPost) => {
@@ -32,7 +33,7 @@ healthPostRouter.route('/')
       }, (err) => next(err))
       .catch((err) => next(err));
   })
-  .delete(cors.corsWithOptions,authenticate.verifyUser, (req, res, next) => {
+  .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
     Healthpost.remove({
         type: 'healthpost'
       })
@@ -51,7 +52,7 @@ healthPostRouter.route('/:healthpostId')
   .options(cors.corsWithOptions, (req, res) => {
     res.sendStatus(200);
   })
-  .get(cors.corsWithOptions,authenticate.verifyUser, (req, res, next) => {
+  .get(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
     Healthpost.findOne({
         _id: req.params.healthpostId,
         type: 'healthpost'
@@ -62,10 +63,13 @@ healthPostRouter.route('/:healthpostId')
       }, (err) => next(err))
       .catch((err) => next(err));
   })
-  .put(cors.corsWithOptions,authenticate.verifyUser, (req, res, next) => {
+  .put(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
     req.body.type = 'healthpost';
     req.body.healthpost = [];
-    Healthpost.findOneAndUpdate({_id:req.params.healthpostId,type:'healthpost'}, {
+    Healthpost.findByIdAndUpdate({
+        _id: req.params.healthpostId,
+        type: 'healthpost'
+      }, {
         $set: req.body
       }, {
         new: true
@@ -75,14 +79,21 @@ healthPostRouter.route('/:healthpostId')
       }, (err) => next(err))
       .catch((err) => next(err));
   })
-  .delete(cors.corsWithOptions,authenticate.verifyUser, (req, res, next) => {
-    Healthpost.findOneAndRemove({_id:req.params.healthpostId,type:'healthpost'})
-      .then((healthPost) => {
-        message = {
-          status: 'OK',
-          msg: 'Successfully Deleted'
-        };
-        success_response(res, message);
+  .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+    Healthpost.deleteOne({
+        _id: req.params.healthpostId,
+        type: 'healthpost'
+      })
+      .then((result) => {
+        if(result.n === 0) {
+          res.sendStatus(404);
+        } else {
+          message = {
+            status: 'OK',
+            msg: 'Successfully Deleted'
+          };
+          success_response(res, message);
+        }
       }, (err) => next(err))
       .catch((err) => next(err));
   });

@@ -5,13 +5,14 @@ module.exports = (io) => {
     const createDMSEvent = require('./eventfunctions').createDMSEvent;
 
     io.on('connection', (socket) => {
-        console.log("socket id : ", socket.id);
+        console.log("All Socket : ",socket.id);
         socket.on('joinDMS', (userid) => {
+            console.log("Join DMS Base dms : ", socket.id);
             User.findById(userid).exec()
                 .then((data) => {
                     if (!data) throw data;
                     socket.join('dms');
-                    message = {
+                    let message = {
                         message:`Base DMS connected with user id ${userid}`,
                         status:1,
                         date: new Date()
