@@ -94,7 +94,7 @@ userRouter.post('/signup', cors.corsWithOptions, (req, res, next) => {
     phoneNumber: req.body.phoneNumber,
     firstName: req.body.firstName,
     lastName: req.body.lastName,
-    healthFacilities: req.body.health_facilities,
+    healthFacilities: req.body.healthFacilities,
   }), req.body.password, function (err, user) {
     if (err) {
       res.statusCode = 500;
