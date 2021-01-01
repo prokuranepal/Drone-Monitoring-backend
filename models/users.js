@@ -3,11 +3,11 @@ var Schema = mongoose.Schema;
 var passportLocalMongoose = require('passport-local-mongoose');
 
 var User = new Schema({
-    firstname: {
+    firstName: {
         type: String,
         required: true
     },
-    lastname: {
+    lastName: {
         type: String,
         required: true
     },
@@ -16,7 +16,7 @@ var User = new Schema({
         required:true,
         unique: true
     },
-    phonenumber: {
+    phoneNumber: {
         type: String,
         required: true,
         unique: true
@@ -26,6 +26,18 @@ var User = new Schema({
         ref:'HealthFacilities',
         required:true
     },
+    province: {
+        type:String,
+        default:null,
+    },
+    district: {
+        type:String,
+        default: null,
+    },
+    town: {
+        type:String,
+        default:null,
+    },
     admin: {
         type: Boolean,
         default: false
@@ -34,6 +46,6 @@ var User = new Schema({
     timestamps: true
 });
 
-User.plugin(passportLocalMongoose, { usernameField: 'email', usernameQueryFields: ['phonenumber'] });
+User.plugin(passportLocalMongoose, { usernameField: 'email', usernameQueryFields: ['phoneNumber'] });
 
 module.exports = mongoose.model('User', User);

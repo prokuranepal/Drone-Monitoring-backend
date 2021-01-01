@@ -29,10 +29,16 @@ userRouter.route('/')
       // healthpost_user[healthpost._id] = await User.find({healthFacilities:healthpost._id}).select("-resetPasswordToken").exec();
       healthpost_user.push(...await User.find({
         healthFacilities: healthpost._id
+      }).populate({
+        path:"healthFacilities",
+        select:"name"
       }).select("-resetPasswordToken").exec());
     })
     hospital_user = await User.find({
       healthFacilities: req.user.healthFacilities
+    }).populate({
+      path:"healthFacilities",
+      select:"name"
     }).select("-resetPasswordToken").exec();
     success_response(res, {
       hospital: hospital_user,
@@ -42,15 +48,15 @@ userRouter.route('/')
   .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
     User.register(new User({
       email: req.body.email,
-      phonenumber: req.body.phoneNumber,
-      firstname: req.body.firstName,
-      lastname: req.body.lastName,
+      phoneNumber: req.body.phoneNumber,
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
       healthFacilities: req.body.healthFacilities,
     }), req.body.password, function (err, user) {
       if (err) {
         res.statusCode = 500;
         res.setHeader('Content-Type', 'application/json');
-        if (err.errmsg && (err.errmsg).includes('phonenumber')) {
+        if (err.errmsg && (err.errmsg).includes('phoneNumber')) {
           var phoneError = {};
           phoneError.name = 'PhoneNumberExistsError';
           phoneError.message = 'User with Phone number already exists';
@@ -85,15 +91,15 @@ userRouter.route('/')
 userRouter.post('/signup', cors.corsWithOptions, (req, res, next) => {
   User.register(new User({
     email: req.body.email,
-    phonenumber: req.body.phone_number,
-    firstname: req.body.first_name,
-    lastname: req.body.last_name,
+    phoneNumber: req.body.phoneNumber,
+    firstName: req.body.firstName,
+    lastName: req.body.lastName,
     healthFacilities: req.body.health_facilities,
   }), req.body.password, function (err, user) {
     if (err) {
       res.statusCode = 500;
       res.setHeader('Content-Type', 'application/json');
-      if (err.errmsg && (err.errmsg).includes('phonenumber')) {
+      if (err.errmsg && (err.errmsg).includes('phoneNumber')) {
         var phoneError = {};
         phoneError.name = 'PhoneNumberExistsError';
         phoneError.message = 'User with Phone number already exists';
@@ -105,6 +111,15 @@ userRouter.post('/signup', cors.corsWithOptions, (req, res, next) => {
         err: err
       });
     } else {
+      if (req.body.district) {
+        user.district = req.body.district;
+      }
+      if (req.body.town) {
+        user.town = req.body.town;
+      }
+      if (req.body.province) {
+        user.town = req.body.province;
+      }
       user.save((err, user) => {
         if (err) {
           res.statusCode = 500;
@@ -241,6 +256,12 @@ userRouter.post('/token', cors.corsWithOptions, (req, res, next) => {
 
 userRouter.route('/:userId')
   .get(cors.corsWithOptions, authenticate.verifyUser, async (req, res, next) => {
+    // if (req.params.userId == req.user._id) {
+    //   User.findById(req.params.userId)
+    //     .then((user) => {
+    //       success_response(res, user);
+    //     });
+    // }else {
     let healthFacilites_list = [];
     await HealthFacilities.findOne({
         _id: req.user.healthFacilities,
@@ -254,6 +275,10 @@ userRouter.route('/:userId')
         })
       })
     User.findById(req.params.userId)
+      .populate({
+        path: 'healthFacilities',
+        select: "name"
+      })
       .then((user) => {
         let cond = healthFacilites_list.includes((user.healthFacilities).toString());
         if (cond) {
@@ -262,38 +287,75 @@ userRouter.route('/:userId')
           success_response(res, user);
         }
       })
+    // }
   })
   .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
     res.statusCode = 403;
     res.end(`POST operation not supported /users/${req.params.userId}`);
   })
   .put(cors.corsWithOptions, authenticate.verifyUser, async (req, res, next) => {
-    let healthFacilites_list = [];
-    await HealthFacilities.findOne({
-        _id: req.user.healthFacilities,
-        type: "hospital"
-      })
-      .then(async (hospital) => {
-        healthFacilites_list.push((hospital._id).toString());
-        let healthFacilities = await HealthFacilities.getHealthPostByHospital(hospital._id);
-        healthFacilities.forEach((healthFacility) => {
-          healthFacilites_list.push((healthFacility._id).toString());
-        })
-      })
-    User.findById(req.params.userId)
-      .then((user) => {
-        let cond = healthFacilites_list.includes((user.healthFacilities).toString());
-        if (cond) {
-          user.firstname = req.body.firstName;
-          user.lastname = req.body.lastName;
-          let cond1 = healthFacilites_list.includes((req.body.healthFacilities).toString())
-          if (cond1) {
-            user.healthFacilities = req.body.healthFacilities;
+    if (req.params.userId == req.user._id) {
+      User.findById(req.params.userId)
+        .then((user) => {
+          if (req.body.firstName) {
+            user.firstName = req.body.firstName;
+          }
+          if (req.body.lastName) {
+            user.lastName = req.body.lastName;
+          }
+          if (req.body.district) {
+            user.district = req.body.district;
+          }
+          if (req.body.town) {
+            user.town = req.body.town;
+          }
+          if (req.body.province) {
+            user.town = req.body.province;
           }
           user.save();
           success_response(res, user);
-        }
-      })
+        })
+    } else {
+      let healthFacilites_list = [];
+      await HealthFacilities.findOne({
+          _id: req.user.healthFacilities,
+          type: "hospital"
+        })
+        .then(async (hospital) => {
+          healthFacilites_list.push((hospital._id).toString());
+          let healthFacilities = await HealthFacilities.getHealthPostByHospital(hospital._id);
+          healthFacilities.forEach((healthFacility) => {
+            healthFacilites_list.push((healthFacility._id).toString());
+          })
+        })
+      User.findById(req.params.userId)
+        .then((user) => {
+          let cond = healthFacilites_list.includes((user.healthFacilities).toString());
+          if (cond) {
+            if (req.body.firstName) {
+              user.firstName = req.body.firstName;
+            }
+            if (req.body.lastName) {
+              user.lastName = req.body.lastName;
+            }
+            if (req.body.district) {
+              user.district = req.body.district;
+            }
+            if (req.body.town) {
+              user.town = req.body.town;
+            }
+            if (req.body.province) {
+              user.town = req.body.province;
+            }
+            let cond1 = healthFacilites_list.includes((req.body.healthFacilities).toString())
+            if (cond1) {
+              user.healthFacilities = req.body.healthFacilities;
+            }
+            user.save();
+            success_response(res, user);
+          }
+        })
+    }
   })
   .delete(cors.corsWithOptions, authenticate.verifyUser, async (req, res, next) => {
     let healthFacilites_list = [];
