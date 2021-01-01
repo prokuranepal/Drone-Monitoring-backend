@@ -25,6 +25,7 @@ var placesRouter = require('./routes/placesRouter');
 var healthFacilitiesRouter = require('./routes/healthFacilitiesRouter');
 var dmsEventRouter = require('./routes/dmsEventRouter');
 var flitghtRouter = require('./routes/flightRouter');
+var maintenanceRouter = require('./routes/maintenanceRouter');
 //Test route
 var {droneDataRouter,flightDataRouter} = require('./routes/dronedataRouter');
 
@@ -69,6 +70,7 @@ app.use('/places', placesRouter);
 app.use('/healthFacilities', healthFacilitiesRouter);
 app.use('/dmsevent', dmsEventRouter);
 app.use('/flights',flitghtRouter);
+app.use('/maintenance',maintenanceRouter)
 //Test route
 app.use('/dronedata', droneDataRouter);
 // app.use('/flights', flightDataRouter);

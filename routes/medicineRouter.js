@@ -64,7 +64,7 @@ medicineRouter.route('/:medicineId')
 		Medicines.findById(req.params.medicineId)
 			.populate({
 				path: "user_added",
-				select: "firstname lastname"
+				select: "firstName lastName"
 			})
 			.then((medicine) => {
 				success_response(res, medicine);
