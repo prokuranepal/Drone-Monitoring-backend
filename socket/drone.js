@@ -15,7 +15,7 @@ module.exports = (io) => {
 
         console.log(`Socket in ${droneName}: ${socket.id}`);
         // Joins the drone to the room and also make the status 1 - Active
-        socket.on('joinDrone', () => {
+        socket.on('joinDrone', (hospital_id) => {
             console.log(`socket of drone ${droneName} : ${socket.id}`);
             actualSocket.to('drone').clients((error, clients) => {
                 if (error) throw error;
@@ -42,7 +42,26 @@ module.exports = (io) => {
                             socket.emit('drone-conn', 'OK');
                             createDMSEvent(droneMessage, 'OK', 'dms', 'drone');
                         })
-                        .catch((err) => socket.emit('drone-status', 'KO'));
+                        .catch(async (err) => {
+                            socket.emit('drone-status', 'KO');
+                            console.error(err);
+                            var new_drone = new Drone({
+                                droneId: droneName,
+                                name: droneName,
+                                status: 1,
+                                type: 0,
+                                hospital: hospital_id
+                            });
+                            await new_drone.save().catch((err) => console.log("Drone Save Error"));
+                            var flight = new Flight({
+                                onTime: Date.now(),
+                                drone: new_drone._id
+                            });
+                            flight.save().catch((err) => console.log("Flight save error"));
+                            io.to('dms').emit('notifications', droneMessage);
+                            socket.emit('drone-conn', 'OK');
+                            createDMSEvent(droneMessage, 'OK', 'dms', 'drone');
+                        });
                 } else {
                     socket.emit('drone-status', 'KO');
                 }
@@ -162,6 +181,33 @@ module.exports = (io) => {
                 }
             })
         });
+        
+        socket.on('flight_start',(flight_start) => {
+            console.log("Flight start", flight_start);
+            actualSocket.in('drone').clients(async (error, clients) => {
+                if (error) throw error;
+                if (clients.includes(socket.id)) {
+                    const drone = await Drone.findOne({
+                        droneId: droneName
+                    }).exec();
+                    const all_flight_drone = await Flight.find({
+                        drone: drone._id
+                    }).exec();
+                    const last_flight_drone = all_flight_drone[all_flight_drone.length-1];
+                    Flight.findById(last_flight_drone._id)
+                        .then(async (flightData) => {
+                            if (!flightData) throw "No flight data";
+                            if (flight_start==0){
+                                flightData.startTime = Date.now();
+                                await flightData.save();
+                            } else if (flight_start==1) {
+                                flightData.endTime = Date.now();
+                                await flightData.save();
+                            }
+                        })
+                }
+            })
+        })
 
         socket.on('data', (data) => {
             actualSocket.in('drone').clients(async (error, clients) => {
@@ -178,18 +224,18 @@ module.exports = (io) => {
                     data['droneMission'] = last_flight_drone._id
                     let dronedata = new DroneData(data);
                     dronedata.save().catch((err) => console.log(`Error in dta save`));
-                    Flight.findById(last_flight_drone._id)
-                        .then(async (flightData) => {
-                            if (!flightData) throw "No flight data";
-                            // TODO: data['status']=='ARMED' condition is needed
-                            if (!flightData.startTime && data['mode'] == "AUTO") {
-                                flightData.startTime = Date.now();
-                                await flightData.save();
-                            } else if (!flightData.endTime && data['mode']== "LAND") {
-                                flightData.endTime = Date.now();
-                                await flightData.save();
-                            }
-                        })
+                    // Flight.findById(last_flight_drone._id)
+                    //     .then(async (flightData) => {
+                    //         if (!flightData) throw "No flight data";
+                    //         // TODO: data['status']=='ARMED' condition is needed
+                    //         if (!flightData.startTime && data['mode'] == "AUTO") {
+                    //             flightData.startTime = Date.now();
+                    //             await flightData.save();
+                    //         } else if (!flightData.endTime && data['mode']== "LAND") {
+                    //             flightData.endTime = Date.now();
+                    //             await flightData.save();
+                    //         }
+                    //     })
                 } else {
                     socket.emit('drone-status', "KO");
                 }
