@@ -173,6 +173,17 @@ module.exports = (io) => {
             })
         });
 
+        socket.on('payloadDrop', (status) => {
+            console.log(status);
+            actualSocket.in('drone').clients((error, clients) => {
+                if (error) throw error;
+                if (clients.includes(socket.id)) {
+                    actualSocket.to('dms').emit('payloadDrop', status);
+                }
+            })
+        });
+
+
         socket.on('rtl', (rtl) => {
             actualSocket.in('dms').clients((error, clients) => {
                 if (error) throw error;
