@@ -8,19 +8,19 @@ var app = require('../app');
 var debug = require('debug')('drone-monitoring:server');
 var http = require('http');
 var fs = require('fs');
-var https = require('https');
-try {
-  var privatekey = fs.readFileSync('/etc/letsencrypt/live/dms.prokurainnovations.com/privkey.pem', 'utf-8');
-  var certificate = fs.readFileSync('/etc/letsencrypt/live/dms.prokurainnovations.com/fullchain.pem', 'utf-8');
-} catch (error) {
-  var privatekey = '';
-  var certificate = '';
-}
+// var https = require('https');
+// try {
+//   var privatekey = fs.readFileSync('/etc/letsencrypt/live/dms.prokurainnovations.com/privkey.pem', 'utf-8');
+//   var certificate = fs.readFileSync('/etc/letsencrypt/live/dms.prokurainnovations.com/fullchain.pem', 'utf-8');
+// } catch (error) {
+//   var privatekey = '';
+//   var certificate = '';
+// }
 
-var credentials = {
-  key: privatekey,
-  cert: certificate
-};
+// var credentials = {
+//   key: privatekey,
+//   cert: certificate
+// };
 
 
 /**
@@ -28,30 +28,30 @@ var credentials = {
  */
 
 var port = normalizePort(process.env.PORT || '3001');
-var httpsport = parseInt(port) + 443;
+// var httpsport = parseInt(port) + 443;
 app.set('port', port);
-app.set('httpsport', httpsport);
+// app.set('httpsport', httpsport);
 
 /**
  * Create HTTP server.
  */
 
 var server = http.createServer(app);
-var httpsserver = https.createServer(credentials, app);
+// var httpsserver = https.createServer(credentials, app);
 
 /**
  * Create Socket server
  */
 const io = app.io;
 io.attach(server);
-io.attach(httpsserver);
+// io.attach(httpsserver);
 
 /**
  * Listen on provided port, on all network interfaces.
  */
 
 server.listen(port);
-httpsserver.listen(httpsport);
+// httpsserver.listen(httpsport);
 server.on('error', onError);
 server.on('listening', onListening);
 
