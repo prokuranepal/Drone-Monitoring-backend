@@ -10,6 +10,9 @@ const Flight = require('../models/flight');
 const success_response = require('./functions/success_response');
 const { populate } = require('../models/drone');
 
+const fs = require('fs');
+const path = require('path');
+
 const droneRouter = express.Router();
 
 droneRouter.use(bodyParser.json());
@@ -115,6 +118,22 @@ droneRouter.route('/:droneId')
                     status: 'OK'
                 };
                 success_response(res, message);
+            }, (err) => next(err))
+            .catch((err) => next(err));
+    });
+
+droneRouter.route('/:droneId/export')
+    .options(cors.corsWithOptions, (req, res) => {
+        res.sendStatus(200);
+    })
+    .get(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+        Flight.find({drone:req.params.droneId})
+            .then(async (flight) => {
+                let drone_data = JSON.stringify(flight);
+                let public_route = path.join(__dirname, '../public/media/');
+                let fileName = 'drone-data.json'
+                await fs.writeFileSync(public_route+fileName, drone_data);
+                res.download(public_route+fileName);
             }, (err) => next(err))
             .catch((err) => next(err));
     });
