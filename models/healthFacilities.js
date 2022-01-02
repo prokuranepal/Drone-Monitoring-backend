@@ -5,14 +5,22 @@ const HealthFacilitiesSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    location: {
+    province: {
         type: String,
         required: true
     },
-    employee: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-    }],
+    district: {
+        type: String,
+        required: true
+    },
+    town: {
+        type: String,
+        required: true
+    },
+    landlineNumber: {
+        type: String,
+        required: true
+    },
     medicine: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Medicine'
@@ -32,7 +40,7 @@ const HealthFacilitiesSchema = new mongoose.Schema({
     },
     type: {
         type:String,
-        enum: ['hospital','healthpost'],
+        enum: ['Hospital','Health Post'],
         required: true
     },
 }, {
@@ -40,8 +48,13 @@ const HealthFacilitiesSchema = new mongoose.Schema({
 });
 
 HealthFacilitiesSchema.statics.getHospitalByUser = async function(healthFacilities_id) {
-    var hospital = await this.findOne({_id:healthFacilities_id, type:"hospital"}).exec();
+    var hospital = await this.findOne({_id:healthFacilities_id, type:"Hospital"}).exec();
     return hospital;
+}
+
+HealthFacilitiesSchema.statics.getTotalHospital = async function() {
+    var hospital = await this.find({type:"Hospital"}).exec();
+    return hospital.length;
 }
 
 HealthFacilitiesSchema.statics.getHospitalByHealthpost = async function(healthpost_id) {
@@ -50,12 +63,12 @@ HealthFacilitiesSchema.statics.getHospitalByHealthpost = async function(healthpo
 }
 
 HealthFacilitiesSchema.statics.getTotalHospitalHealthPost = async function(hospital_id) {
-    var totalHealthPost = await this.find({hospital:hospital_id,type:"healthpost"}).exec();
+    var totalHealthPost = await this.find({hospital:hospital_id,type:"Health Post"}).exec();
     return totalHealthPost.length;
 }
 
 HealthFacilitiesSchema.statics.getHealthPostByHospital = async function(hospital_id) {
-    var totalHealthPost = await this.find({hospital:hospital_id,type:"healthpost"}).exec();
+    var totalHealthPost = await this.find({hospital:hospital_id,type:"Health Post"}).exec();
     return totalHealthPost;
 }
 

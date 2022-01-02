@@ -2,6 +2,7 @@ const express = require('express');
 const bodyparser = require('body-parser');
 const cors = require('./cors');
 const Vaccine = require('../models/vaccine');
+const UserRole = require('../utils/utils').UserRole;
 
 const vaccineRouter = express.Router();
 
@@ -15,7 +16,7 @@ vaccineRouter.route('/')
     .options(cors.corsWithOptions, (req, res) => {
         res.sendStatus(200);
     })
-    .get(cors.corsWithOptions, (req, res, next) => {
+    .get(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin]), (req, res, next) => {
         Vaccine.find({})
             .populate('healthfacilities')
             .then((vaccine) => {
@@ -23,14 +24,14 @@ vaccineRouter.route('/')
             }, (err) => next(err))
             .catch((err) => next(err));
     })
-    .post(cors.corsWithOptions, (req, res, next) => {
+    .post(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin]), (req, res, next) => {
         Vaccine.create(req.body)
             .then((vaccine) => {
                 success_response(res, vaccine);
             }, (err) => next(err))
             .catch((err) => next(err));
     })
-    .delete(cors.corsWithOptions, (req, res, next) => {
+    .delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin]), (req, res, next) => {
         Vaccine.remove({})
             .then((vaccine) => {
                 message = {
@@ -46,7 +47,7 @@ vaccineRouter.route('/:vaccineId')
     .options(cors.corsWithOptions, (req, res) => {
         res.sendStatus(200);
     })
-    .get(cors.corsWithOptions, (req, res, next) => {
+    .get(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin]), (req, res, next) => {
         Vaccine.findOne({
                 _id: req.params.vaccineId
             })
@@ -56,7 +57,7 @@ vaccineRouter.route('/:vaccineId')
             }, (err) => next(err))
             .catch((err) => next(err));
     })
-    .put(cors.cors, (req, res, next) => {
+    .put(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin]), (req, res, next) => {
         Vaccine.findByIdAndUpdate(req.params.vaccineId, {
                 $set: req.body
             }, {
@@ -67,7 +68,7 @@ vaccineRouter.route('/:vaccineId')
             }, (err) => next(err))
             .catch((err) => next(err));
     })
-    .delete(cors.cors, (req, res, next) => {
+    .delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin]), (req, res, next) => {
         Vaccine.findByIdAndRemove(req.params.vaccineId)
             .then((vaccine) => {
                 message = {

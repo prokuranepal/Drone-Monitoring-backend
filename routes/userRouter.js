@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const User = require('../models/users');
 const HealthFacilities = require('../models/healthFacilities');
+const UserRole = require('../utils/utils').UserRole;
 
 const passport = require('passport');
 const authenticate = require('../authenticate');
@@ -22,82 +23,104 @@ userRouter.options('*', cors.corsWithOptions, (req, res) => {
 });
 
 userRouter.route('/')
-  .get(cors.corsWithOptions, authenticate.verifyUser, async (req, res, next) => {
-    health_facilities = await HealthFacilities.getHealthPostByHospital(req.user.healthFacilities._id);
-    healthpost_user = [];
-    health_facilities.forEach(async (healthpost) => {
-      // healthpost_user[healthpost._id] = await User.find({healthFacilities:healthpost._id}).select("-resetPasswordToken").exec();
-      healthpost_user.push(...await User.find({
-        healthFacilities: healthpost._id
-      }).populate({
-        path:"healthFacilities",
-        select:"name"
-      }).select("-resetPasswordToken").exec());
-    })
-    hospital_user = await User.find({
-      healthFacilities: req.user.healthFacilities
-    }).populate({
-      path:"healthFacilities",
-      select:"name"
-    }).select("-resetPasswordToken").exec();
-    success_response(res, {
-      hospital: hospital_user,
-      healthpost: healthpost_user
-    });
-  })
-  .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
-    User.register(new User({
-      email: req.body.email,
-      phoneNumber: req.body.phoneNumber,
-      firstName: req.body.firstName,
-      lastName: req.body.lastName,
-      healthFacilities: req.body.healthFacilities,
-    }), req.body.password, function (err, user) {
-      if (err) {
-        res.statusCode = 500;
-        res.setHeader('Content-Type', 'application/json');
-        if (err.errmsg && (err.errmsg).includes('phoneNumber')) {
-          var phoneError = {};
-          phoneError.name = 'PhoneNumberExistsError';
-          phoneError.message = 'User with Phone number already exists';
-          return res.json({
-            err: phoneError
-          });
-        }
-        return res.json({
-          err: err
+  .get(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin, UserRole.Hospital, UserRole.RegulatoryBody]), async (req, res, next) => {
+    if (req.user.bodiesType === UserRole.SuperAdmin) {
+      let query_obj = {
+        bodiesType: req.query.body
+      };
+      user = User.find(query_obj);
+      if (req.query.body === 'Hospital') {
+        user = user.populate({
+          path: 'bodiesId',
+          select: 'name',
+          model: 'HealthFacilities'
         });
-      } else {
-        user.save((err, user) => {
-          if (err) {
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'application/json');
-            res.json({
-              err: err
-            });
-            return;
-          }
-          res.statusCode = 200;
-          res.setHeader('Content-Type', 'application/json');
-          res.json({
-            success: true,
-            status: 'Registration Successful'
-          });
+      } else if (req.query.body === "Regulatory Body") {
+        user = user.populate({
+          path: 'bodiesId',
+          select: 'name',
+          model: 'RegulatoryBodies'
         });
       }
-    });
-  });
+      user.then((users) => {
+          success_response(res, users);
+        }, (err) => next(err))
+        .catch((err) => next(err));
+    } else if (req.query.bodiesId) {
+      let query_obj = {
+        bodiesId: req.query.bodiesId
+      };
+      User.find(query_obj)
+        .then((users) => {
+          success_response(res, users);
+        }, (err) => next(err))
+        .catch((err) => next(err));
+    } else {
+      health_facilities = await HealthFacilities.getHealthPostByHospital(req.user.bodiesId);
+      healthpost_user = [];
+      health_facilities.forEach(async (healthpost) => {
+        // healthpost_user[healthpost._id] = await User.find({healthFacilities:healthpost._id}).select("-resetPasswordToken").exec();
+        healthpost_user.push(...await User.find({
+          bodiesId: healthpost._id
+        }).populate({
+          path: "bodiesId",
+          select: "name",
+          model: "HealthFacilities"
+        }).select("-resetPasswordToken").exec());
+        success_response(res, healthpost_user);
+      });
+    }
+  })
+// .post(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin, UserRole.RegulatoryBody]), (req, res, next) => {
+//   User.register(new User({
+//     email: req.body.email,
+//     phoneNumber: req.body.phoneNumber,
+//     firstName: req.body.firstName,
+//     lastName: req.body.lastName,
+//   }), req.body.password, function (err, user) {
+//     if (err) {
+//       res.statusCode = 500;
+//       res.setHeader('Content-Type', 'application/json');
+//       if (err.errmsg && (err.errmsg).includes('phoneNumber')) {
+//         var phoneError = {};
+//         phoneError.name = 'PhoneNumberExistsError';
+//         phoneError.message = 'User with Phone number already exists';
+//         return res.json({
+//           err: phoneError
+//         });
+//       }
+//       return res.json({
+//         err: err
+//       });
+//     } else {
+//       user.save((err, user) => {
+//         if (err) {
+//           res.statusCode = 500;
+//           res.setHeader('Content-Type', 'application/json');
+//           res.json({
+//             err: err
+//           });
+//           return;
+//         }
+//         res.statusCode = 200;
+//         res.setHeader('Content-Type', 'application/json');
+//         res.json({
+//           success: true,
+//           status: 'Registration Successful'
+//         });
+//       });
+//     }
+//   });
+// });
 
 userRouter.post('/signup', cors.corsWithOptions, (req, res, next) => {
   User.register(new User({
     email: req.body.email,
     phoneNumber: req.body.phoneNumber,
-    firstName: req.body.firstName,
-    lastName: req.body.lastName,
-    healthFacilities: req.body.healthFacilities,
+    name: req.body.name,
   }), req.body.password, function (err, user) {
     if (err) {
-      res.statusCode = 500;
+      res.statusCode = 400;
       res.setHeader('Content-Type', 'application/json');
       if (err.errmsg && (err.errmsg).includes('phoneNumber')) {
         var phoneError = {};
@@ -111,14 +134,20 @@ userRouter.post('/signup', cors.corsWithOptions, (req, res, next) => {
         err: err
       });
     } else {
-      if (req.body.district) {
-        user.district = req.body.district;
+      if (req.body.bodiesType) {
+        user.bodiesType = req.body.bodiesType;
       }
-      if (req.body.town) {
-        user.town = req.body.town;
+      if (req.body.bodiesId) {
+        user.bodiesId = req.body.bodiesId;
       }
-      if (req.body.province) {
-        user.town = req.body.province;
+      if (req.body.department) {
+        user.department = req.body.department;
+      }
+      if (req.body.position) {
+        user.position = req.body.position;
+      }
+      if (req.body.email) {
+        user.email = req.body.email;
       }
       user.save((err, user) => {
         if (err) {
@@ -173,6 +202,7 @@ userRouter.post('/login', cors.cors, (req, res, next) => {
       res.setHeader('Content-Type', 'application/json');
       return res.json({
         userId: user.id,
+        userType: user.bodiesType,
         success: true,
         token: token,
         expiresIn: 3600,
@@ -231,6 +261,7 @@ userRouter.post('/token', cors.corsWithOptions, (req, res, next) => {
       res.setHeader('Content-Type', 'application/json');
       return res.json({
         userId: user._id,
+        userType: user.role,
         success: true,
         token: token,
         expiresIn: 3600,
@@ -254,7 +285,35 @@ userRouter.post('/token', cors.corsWithOptions, (req, res, next) => {
   }
 })
 
+userRouter.route('/profile')
+  .options(cors.corsWithOptions, (req, res) => {
+    res.sendStatus(200);
+  })
+  .get(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+    user_query = User.findById(req.user._id);
+    if ([UserRole.Hospital, UserRole.HealthPost].includes(req.user.bodiesType)) {
+      user_query = user_query.populate({
+        path: 'bodiesId',
+        select: 'name',
+        model: 'HealthFacilities'
+      });
+    } else if ([UserRole.RegulatoryBody].includes(req.user.bodiesType)) {
+      user_query = user_query.populate({
+        path: 'bodiesId',
+        select: 'name',
+        model: 'RegulatoryBodies'
+      });
+    }
+    user_query.then((user) => {
+        success_response(res, user);
+      }, (err) => next(err))
+      .catch((err) => next(err));
+  });
+
 userRouter.route('/:userId')
+  .options(cors.corsWithOptions, (req, res) => {
+    res.sendStatus(200);
+  })
   .get(cors.corsWithOptions, authenticate.verifyUser, async (req, res, next) => {
     // if (req.params.userId == req.user._id) {
     //   User.findById(req.params.userId)
@@ -264,8 +323,8 @@ userRouter.route('/:userId')
     // }else {
     let healthFacilites_list = [];
     await HealthFacilities.findOne({
-        _id: req.user.healthFacilities,
-        type: "hospital"
+        _id: req.user.bodiesId,
+        type: "Hospital"
       })
       .then(async (hospital) => {
         healthFacilites_list.push((hospital._id).toString());
@@ -294,23 +353,20 @@ userRouter.route('/:userId')
     res.end(`POST operation not supported /users/${req.params.userId}`);
   })
   .put(cors.corsWithOptions, authenticate.verifyUser, async (req, res, next) => {
-    if (req.params.userId == req.user._id) {
+    if (req.params.userId == req.user._id || req.user.bodiesType == UserRole.SuperAdmin) {
       User.findById(req.params.userId)
         .then((user) => {
-          if (req.body.firstName) {
-            user.firstName = req.body.firstName;
+          if (req.body.name) {
+            user.name = req.body.name;
           }
-          if (req.body.lastName) {
-            user.lastName = req.body.lastName;
+          if (req.body.department) {
+            user.department = req.body.department;
           }
-          if (req.body.district) {
-            user.district = req.body.district;
+          if (req.body.position) {
+            user.position = req.body.position;
           }
-          if (req.body.town) {
-            user.town = req.body.town;
-          }
-          if (req.body.province) {
-            user.town = req.body.province;
+          if (req.body.email) {
+            user.email = req.body.email;
           }
           user.save();
           success_response(res, user);
@@ -318,8 +374,8 @@ userRouter.route('/:userId')
     } else {
       let healthFacilites_list = [];
       await HealthFacilities.findOne({
-          _id: req.user.healthFacilities,
-          type: "hospital"
+          _id: req.user.bodiesId,
+          type: "Hospital"
         })
         .then(async (hospital) => {
           healthFacilites_list.push((hospital._id).toString());
@@ -330,26 +386,23 @@ userRouter.route('/:userId')
         })
       User.findById(req.params.userId)
         .then((user) => {
-          let cond = healthFacilites_list.includes((user.healthFacilities).toString());
+          let cond = healthFacilites_list.includes((user.bodiesId).toString());
           if (cond) {
-            if (req.body.firstName) {
-              user.firstName = req.body.firstName;
+            if (req.body.name) {
+              user.name = req.body.name;
             }
-            if (req.body.lastName) {
-              user.lastName = req.body.lastName;
+            if (req.body.department) {
+              user.department = req.body.department;
             }
-            if (req.body.district) {
-              user.district = req.body.district;
+            if (req.body.position) {
+              user.position = req.body.position;
             }
-            if (req.body.town) {
-              user.town = req.body.town;
+            if (req.body.email) {
+              user.email = req.body.email;
             }
-            if (req.body.province) {
-              user.town = req.body.province;
-            }
-            let cond1 = healthFacilites_list.includes((req.body.healthFacilities).toString())
+            let cond1 = healthFacilites_list.includes((req.body.bodiesId).toString())
             if (cond1) {
-              user.healthFacilities = req.body.healthFacilities;
+              user.bodiesId = req.body.bodiesId;
             }
             user.save();
             success_response(res, user);
@@ -357,35 +410,43 @@ userRouter.route('/:userId')
         })
     }
   })
-  .delete(cors.corsWithOptions, authenticate.verifyUser, async (req, res, next) => {
-    let healthFacilites_list = [];
-    await HealthFacilities.findOne({
-        _id: req.user.healthFacilities,
-        type: "hospital"
-      })
-      .then(async (hospital) => {
-        healthFacilites_list.push((hospital._id).toString());
-        let healthFacilities = await HealthFacilities.getHealthPostByHospital(hospital._id);
-        healthFacilities.forEach((healthFacility) => {
-          healthFacilites_list.push((healthFacility._id).toString());
+  .delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin]), async (req, res, next) => {
+    if (req.user.bodiesType == UserRole.SuperAdmin) {
+      User.findById(req.params.userId)
+        .then((user) => {
+          user.remove();
+          success_response(res, user);
         })
-      })
-    User.findById(req.params.userId)
-      .then((user) => {
-        if (user) {
-          let cond = healthFacilites_list.includes((user.healthFacilities).toString());
-          if (cond) {
-            user.deleteOne();
-            success_response(res, user);
+    } else {
+      let healthFacilites_list = [];
+      await HealthFacilities.findOne({
+          _id: req.user.bodiesId,
+          type: "Hospital"
+        })
+        .then(async (hospital) => {
+          healthFacilites_list.push((hospital._id).toString());
+          let healthFacilities = await HealthFacilities.getHealthPostByHospital(hospital._id);
+          healthFacilities.forEach((healthFacility) => {
+            healthFacilites_list.push((healthFacility._id).toString());
+          })
+        })
+      User.findById(req.params.userId)
+        .then((user) => {
+          if (user) {
+            let cond = healthFacilites_list.includes((user.healthFacilities).toString());
+            if (cond) {
+              user.deleteOne();
+              success_response(res, user);
+            }
+          } else {
+            success_response(res, {
+              status: 403,
+              message: "User cannot be found"
+            });
           }
-        } else {
-          success_response(res, {
-            status: 403,
-            message: "User cannot be found"
-          });
-        }
-      })
-      .catch((err) => next(err));
+        })
+        .catch((err) => next(err));
+    }
   })
 
 

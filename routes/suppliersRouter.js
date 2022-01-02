@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyparser = require('body-parser');
 const mongoose = require('mongoose');
+const UserRole = require('../utils/utils').UserRole;
 
 const authenticate = require('../authenticate');
 
@@ -17,21 +18,21 @@ suppliersRouter.route('/')
     .options(cors.corsWithOptions, (req, res) => {
         res.sendStatus(200);
     })
-    .get(cors.cors, (req, res, next) => {
+    .get(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin]), (req, res, next) => {
         Suppliers.find({})
             .then((supplier) => {
                 success_response(res, supplier);
             }, (err) => next(err))
             .catch((err) => next(err));
     })
-    .post(cors.cors, (req, res, next) => {
+    .post(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin]), (req, res, next) => {
         Suppliers.create(req.body)
             .then((supplier) => {
                 success_response(res, supplier);
             }, (err) => next(err))
             .catch((err) => next(err));
     })
-    .delete(cors.cors, (req, res, next) => {
+    .delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin]), (req, res, next) => {
         Suppliers.remove({})
             .then((supplier) => {
                 message = {
@@ -47,26 +48,30 @@ suppliersRouter.route('/:suppliersId')
     .options(cors.corsWithOptions, (req, res) => {
         res.sendStatus(200);
     })
-    .get(cors.cors, (req, res, next) => {
-        Suppliers.findById({ _id: req.params.suppliersId })
+    .get(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin]), (req, res, next) => {
+        Suppliers.findById({
+                _id: req.params.suppliersId
+            })
             .then((supplier) => {
                 success_response(res, supplier);
             }, (err) => next(err))
             .catch((err) => next(err));
     })
-    .put(cors.cors, (req, res, next) => {
+    .put(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin]), (req, res, next) => {
         Suppliers.findByIdAndUpdate(req.params.suppliersId, {
-            $set: req.body
-        }, {
-            new: true
-        })
+                $set: req.body
+            }, {
+                new: true
+            })
             .then((modifiedData) => {
                 success_response(res, modifiedData);
             }, (err) => next(err))
             .catch((err) => next(err));
     })
-    .delete(cors.cors, (req, res, next) => {
-        Suppliers.deleteOne({ _id: req.params.suppliersId })
+    .delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin]), (req, res, next) => {
+        Suppliers.deleteOne({
+                _id: req.params.suppliersId
+            })
             .then((supplier) => {
                 message = {
                     status: true,

@@ -5,6 +5,7 @@ module.exports = function (io) {
     const authenticate = require('../authenticate');
     const cors = require('./cors');
     const socket_notification = require('../socket/notificationmessage');
+    const UserRole = require('../utils/utils').UserRole;
 
     const Orders = require('../models/orders');
     const HealthFacilities = require('../models/healthFacilities');
@@ -21,13 +22,13 @@ module.exports = function (io) {
         .options(cors.corsWithOptions, (req, res) => {
             res.sendStatus(200);
         })
-        .get(cors.corsWithOptions, authenticate.verifyUser, async (req, res, next) => {
-            var healthfacilities = await HealthFacilities.findById(req.user.healthFacilities).exec();
+        .get(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin]), async (req, res, next) => {
+            var healthfacilities = await HealthFacilities.findById(req.user.bodiesId).exec();
             var query_object = {};
-            if (healthfacilities.type == "hospital") {
-                query_object.destination = req.user.healthFacilities;
+            if (healthfacilities.type == "Hospital") {
+                query_object.destination = req.user.bodiesId;
             } else {
-                query_object.origin = req.user.healthFacilities;
+                query_object.origin = req.user.bodiesId;
             }
             Orders.find(query_object).select('-orderItem').sort('-createdAt')
                 .populate({
@@ -43,25 +44,22 @@ module.exports = function (io) {
                 }, (err) => next(err))
                 .catch((err) => next(err));
         })
-        .post(cors.corsWithOptions, authenticate.verifyUser, async (req, res, next) => {
-            console.log(req.user.healthFacilities)
-            req.body.destination = await HealthFacilities.getHospitalByHealthpost(req.user.healthFacilities);
-            req.body.origin = req.user.healthFacilities;
+        .post(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin]), async (req, res, next) => {
+            req.body.destination = await HealthFacilities.getHospitalByHealthpost(req.user.bodiesId);
+            req.body.origin = req.user.bodiesId;
             req.body.user = req.user;
             Orders.create(req.body)
                 .then((order) => {
-                    socket_notification(io, `Order has been created by ${req.user.healthFacilities}`, 1);
+                    socket_notification(io, `Order has been created by ${req.user.bodiesId}`, 1);
                     success_response(res, order);
                 }, (err) => {
-                    console.log(err);
                     next(err)
                 })
                 .catch((err) => {
-                    console.log(err);
                     next(err)
                 });
         })
-        .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+        .delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin]), (req, res, next) => {
             Orders.remove({})
                 .then((order) => {
                     message = {
@@ -77,7 +75,7 @@ module.exports = function (io) {
         .options(cors.corsWithOptions, (req, res) => {
             res.sendStatus(200);
         })
-        .get(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+        .get(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin]), (req, res, next) => {
             Orders.findOne({
                     _id: req.params.orderId
                 })
@@ -95,7 +93,7 @@ module.exports = function (io) {
                 }, (err) => next(err))
                 .catch((err) => next(err));
         })
-        .put(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+        .put(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin]), (req, res, next) => {
             var update_value = {};
             if (req.body.status) {
                 update_value.status = req.body.status;
@@ -112,7 +110,7 @@ module.exports = function (io) {
                 }, (err) => next(err))
                 .catch((err) => next(err));
         })
-        .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+        .delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin]), (req, res, next) => {
             Orders.findByIdAndRemove(req.params.orderId)
                 .then((order) => {
                     let message = {
@@ -125,7 +123,7 @@ module.exports = function (io) {
         });
 
     orderRouter.route('/:orderId/cancel')
-        .put(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+        .put(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin]), (req, res, next) => {
             const order = Orders.findById(req.params.orderId)
                 .then((order) => {
                     order.status = 'cancelled';

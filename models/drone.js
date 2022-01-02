@@ -60,17 +60,22 @@ const DroneSchema = new Schema({
 });
 
 DroneSchema.statics.getTotalHospitalDrone = async function (hospital_id) {
-    var totalDrone = await this.find({
-        hospital: hospital_id
-    }).exec();
+    let query_obj = {};
+    if (hospital_id) {
+        query_obj.hospital = hospital_id;
+    }
+    var totalDrone = await this.find(query_obj).exec();
     return totalDrone.length;
 }
 
 DroneSchema.statics.getTotalHospitalFlyingDrone = async function (hospital_id) {
-    var totalDrone = await this.find({
-        hospital: hospital_id,
+    let query_obj = {
         status: 1
-    }).exec();
+    };
+    if (hospital_id) {
+        query_obj.hospital = hospital_id;
+    }
+    var totalDrone = await this.find(query_obj).exec();
     return totalDrone.length;
 }
 

@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 
 const authenticate = require('../authenticate');
 const cors = require('./cors');
+const UserRole = require('../utils/utils').UserRole;
 
 const Mission = require('../models/mission');
 const success_response = require('./functions/success_response');
@@ -16,9 +17,9 @@ missionRouter.route('/')
     .options(cors.corsWithOptions, (req, res) => {
         res.sendStatus(200);
     })
-    .get(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+    .get(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.Hospital]), (req, res, next) => {
         Mission.find({
-                hospital: req.user.healthFacilities
+                hospital: req.user.bodiesId
             })
             .populate({
                 path: "hospital",
@@ -34,8 +35,8 @@ missionRouter.route('/')
             }, (err) => next(err))
             .catch((err) => next(err));
     })
-    .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
-        req.body.hospital = req.user.healthFacilities;
+    .post(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.Hospital]), (req, res, next) => {
+        req.body.hospital = req.user.bodiesId;
         req.body.wb = (req.body.waypoints).length;
         Mission.create(req.body)
             .then((missions) => {
@@ -47,9 +48,9 @@ missionRouter.route('/')
         res.statusCode = 403;
         res.end(`PUT operation not supported /mission`);
     })
-    .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+    .delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.Hospital]), (req, res, next) => {
         Mission.remove({
-                hospital: req.user.healthFacilities
+                hospital: req.user.bodiesId
             })
             .then((missions) => {
                 let message = {
@@ -65,7 +66,7 @@ missionRouter.route('/:missionId')
     .options(cors.corsWithOptions, (req, res) => {
         res.sendStatus(200);
     })
-    .get(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+    .get(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.Hospital]), (req, res, next) => {
         Mission.findById(req.params.missionId)
             .populate({
                 path: "hospital",
@@ -84,8 +85,8 @@ missionRouter.route('/:missionId')
         res.statusCode = 403;
         res.end(`POST operation not supported /mission/${req.params.missionId}`);
     })
-    .put(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
-        req.body.hospital = req.user.healthFacilities;
+    .put(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.Hospital]), (req, res, next) => {
+        req.body.hospital = req.user.bodiesId;
         Mission.findByIdAndUpdate(req.params.missionId, {
                 $set: req.body
             }, {
@@ -95,7 +96,7 @@ missionRouter.route('/:missionId')
             }, (err) => next(err))
             .catch((err) => next(err));
     })
-    .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+    .delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.Hospital]), (req, res, next) => {
         Mission.findByIdAndRemove(req.params.missionId)
             .then((mission) => {
                 let message = {

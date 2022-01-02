@@ -60,3 +60,22 @@ exports.jwtPassport = passport.use(new JwtStrategy(opts, (req, jwt_payload, done
 exports.verifyUser = passport.authenticate('jwt', {
     session: false
 });
+
+
+exports.checkIsInRoles = (roles) => (req, res, next) => {
+    if (!req.user) {
+        return next({
+            status: 401,
+            message: "User not present"
+        }, false);
+    }
+    const hasRole = roles.includes(req.user.bodiesType);
+    if (!hasRole) {
+        return next({
+            status: 403,
+            message: "User doesnot have permission"
+        }, false);
+    }
+
+    return next()
+}
