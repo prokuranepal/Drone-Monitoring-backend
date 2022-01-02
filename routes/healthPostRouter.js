@@ -1,6 +1,7 @@
 const Healthpost = require('../models/healthFacilities');
 const cors = require('./cors');
 const express = require('express');
+const UserRole = require('../utils/utils').UserRole;
 const healthPostRouter = express.Router();
 const bodyparser = require('body-parser');
 const success_response = require('./functions/success_response');
@@ -13,19 +14,19 @@ healthPostRouter.route('/')
   .options(cors.corsWithOptions, (req, res) => {
     res.sendStatus(200);
   })
-  .get(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+  .get(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.Hospital]), (req, res, next) => {
     Healthpost.find({
-        type: 'healthpost',
-        hospital: req.user.healthFacilities
+        type: 'Health Post',
+        hospital: req.user.bodiesId
       }).select("-employee -medicine")
       .then((healthPost) => {
         success_response(res, healthPost);
       }, (err) => next(err))
       .catch((err) => next(err));
   })
-  .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
-    req.body.type = 'healthpost';
-    req.body.hospital = req.user.healthFacilities;
+  .post(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.Hospital]), (req, res, next) => {
+    req.body.type = 'Health Post';
+    req.body.hospital = req.user.bodiesId;
     req.body.healthpost = [];
     Healthpost.create(req.body)
       .then((healthPost) => {
@@ -33,9 +34,9 @@ healthPostRouter.route('/')
       }, (err) => next(err))
       .catch((err) => next(err));
   })
-  .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+  .delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.Hospital]), (req, res, next) => {
     Healthpost.remove({
-        type: 'healthpost'
+        type: 'Health Post'
       })
       .then((healthPost) => {
         message = {
@@ -52,10 +53,10 @@ healthPostRouter.route('/:healthpostId')
   .options(cors.corsWithOptions, (req, res) => {
     res.sendStatus(200);
   })
-  .get(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+  .get(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.Hospital]), (req, res, next) => {
     Healthpost.findOne({
         _id: req.params.healthpostId,
-        type: 'healthpost'
+        type: 'Health Post'
       })
       .populate('medicine')
       .then((healthPost) => {
@@ -63,12 +64,12 @@ healthPostRouter.route('/:healthpostId')
       }, (err) => next(err))
       .catch((err) => next(err));
   })
-  .put(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
-    req.body.type = 'healthpost';
+  .put(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.Hospital]), (req, res, next) => {
+    req.body.type = 'Health Post';
     req.body.healthpost = [];
     Healthpost.findByIdAndUpdate({
         _id: req.params.healthpostId,
-        type: 'healthpost'
+        type: 'Health Post'
       }, {
         $set: req.body
       }, {
@@ -79,13 +80,13 @@ healthPostRouter.route('/:healthpostId')
       }, (err) => next(err))
       .catch((err) => next(err));
   })
-  .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+  .delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.Hospital]), (req, res, next) => {
     Healthpost.deleteOne({
         _id: req.params.healthpostId,
-        type: 'healthpost'
+        type: 'Health Post'
       })
       .then((result) => {
-        if(result.n === 0) {
+        if (result.n === 0) {
           res.sendStatus(404);
         } else {
           message = {
@@ -97,7 +98,6 @@ healthPostRouter.route('/:healthpostId')
       }, (err) => next(err))
       .catch((err) => next(err));
   });
-
 
 
 module.exports = healthPostRouter;

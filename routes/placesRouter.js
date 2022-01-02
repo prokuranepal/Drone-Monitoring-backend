@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const UserRole = require('../utils/utils').UserRole;
 
 const authenticate = require('../authenticate');
 const cors = require('./cors');
@@ -16,17 +17,17 @@ placesRouter.route('/')
     .options(cors.corsWithOptions, (req, res) => {
         res.sendStatus(200);
     })
-    .get(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+    .get(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin, UserRole.Hospital]), (req, res, next) => {
         Places.find({
-                healthFacilities: req.user.healthFacilities
+                healthFacilities: req.user.bodiesId
             })
             .then((places) => {
                 success_response(res, places);
             }, (err) => next(err))
             .catch((err) => next(err));
     })
-    .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
-        req.body.healthFacilities = req.user.healthFacilities;
+    .post(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin, UserRole.Hospital]), (req, res, next) => {
+        req.body.healthFacilities = req.user.bodiesId;
         Places.create(req.body)
             .then((places) => {
                 success_response(res, places);
@@ -38,14 +39,14 @@ placesRouter.route('/')
         res.statusCode = 403;
         res.end(`PUT operation not supported /places`);
     })
-    .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+    .delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin, UserRole.Hospital]), (req, res, next) => {
         Places.remove({
-                healthFacilities: req.user.healthFacilities
+                healthFacilities: req.user.bodiesId
             })
             .then((places) => {
                 let message = {
                     status: "OK",
-                    msg:"Successfully Deleted"
+                    msg: "Successfully Deleted"
                 }
                 success_response(res, message);
             }, (err) => next(err))
@@ -56,7 +57,7 @@ placesRouter.route('/:placesId')
     .options(cors.corsWithOptions, (req, res) => {
         res.sendStatus(200);
     })
-    .get(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+    .get(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin, UserRole.Hospital]), (req, res, next) => {
         Places.findById(req.params.placesId)
             .then((places) => {
                 success_response(res, places);
@@ -67,8 +68,8 @@ placesRouter.route('/:placesId')
         res.statusCode = 403;
         res.end(`POST operation not supported /places/${req.params.placesId}`);
     })
-    .put(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
-        req.body.healthFacilities = req.user.healthFacilities;
+    .put(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin, UserRole.Hospital]), (req, res, next) => {
+        req.body.healthFacilities = req.user.bodiesId;
         Places.findByIdAndUpdate(req.params.placesId, {
                 $set: req.body
             }, {
@@ -78,12 +79,12 @@ placesRouter.route('/:placesId')
             }, (err) => next(err))
             .catch((err) => next(err));
     })
-    .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+    .delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin, UserRole.Hospital]), (req, res, next) => {
         Places.findByIdAndRemove(req.params.placesId)
             .then((places) => {
                 let message = {
                     status: "OK",
-                    msg:"Successfully Deleted"
+                    msg: "Successfully Deleted"
                 }
                 success_response(res, message);
             }, (err) => next(err))

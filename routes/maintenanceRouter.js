@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 
 const authenticate = require('../authenticate');
 const cors = require('./cors');
+const UserRole = require('../utils/utils').UserRole;
 
 const Maintenance = require('../models/maintenance');
 const Drone = require('../models/drone');
@@ -18,7 +19,7 @@ maintenanceRouter.route('/')
     .options(cors.corsWithOptions, (req, res) => {
         res.sendStatus(200);
     })
-    .get(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+    .get(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin, UserRole.RegulatoryBody]), (req, res, next) => {
         Maintenance.find()
             .populate({
                 path: "droneId",
@@ -29,18 +30,22 @@ maintenanceRouter.route('/')
             }, (err) => next(err))
             .catch((err) => next(err));
     })
-    .post(cors.corsWithOptions, authenticate.verifyUser,(req, res, next) => {
+    .post(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin, UserRole.RegulatoryBody]), (req, res, next) => {
         Maintenance.create(req.body)
             .then(async (maintenances) => {
-                if (maintenances.status === 2 ){
-                    await Drone.findByIdAndUpdate(maintenances.droneId,{
-                        $set: {status:0}
+                if (maintenances.status === 2) {
+                    await Drone.findByIdAndUpdate(maintenances.droneId, {
+                        $set: {
+                            status: 0
+                        }
                     }, {
                         new: true
                     }).exec();
                 } else {
-                    await Drone.findByIdAndUpdate(maintenances.droneId,{
-                        $set: {status:2}
+                    await Drone.findByIdAndUpdate(maintenances.droneId, {
+                        $set: {
+                            status: 2
+                        }
                     }, {
                         new: true
                     }).exec();
@@ -53,7 +58,7 @@ maintenanceRouter.route('/')
         res.statusCode = 403;
         res.end(`PUT operation not supported /maintenance`);
     })
-    .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+    .delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin, UserRole.RegulatoryBody]), (req, res, next) => {
         Maintenance.remove()
             .then((_) => {
                 let message = {
@@ -69,7 +74,7 @@ maintenanceRouter.route('/details')
     .options(cors.corsWithOptions, (req, res) => {
         res.sendStatus(200);
     })
-    .get(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+    .get(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin, UserRole.RegulatoryBody]), (req, res, next) => {
         Maintenance.find()
             .populate({
                 path: "droneId",
@@ -83,11 +88,11 @@ maintenanceRouter.route('/details')
                 let response_data = {
                     'cards': {
                         'open': status_0,
-                        'inProgress':status_1,
-                        'completed':status_2,
-                        'overdue':status_3,
+                        'inProgress': status_1,
+                        'completed': status_2,
+                        'overdue': status_3,
                     },
-                    'data':maintenances
+                    'data': maintenances
                 }
                 success_response(res, response_data);
             })
@@ -97,7 +102,7 @@ maintenanceRouter.route('/:maintenanceId')
     .options(cors.corsWithOptions, (req, res) => {
         res.sendStatus(200);
     })
-    .get(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+    .get(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin, UserRole.RegulatoryBody]), (req, res, next) => {
         Maintenance.findById(req.params.maintenanceId)
             .populate({
                 path: 'droneId',
@@ -112,22 +117,26 @@ maintenanceRouter.route('/:maintenanceId')
         res.statusCode = 403;
         res.end(`POST operation not supported /maintenance/${req.params.maintenanceId}`);
     })
-    .put(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
-        req.body.hospital = req.user.healthFacilities;
+    .put(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin, UserRole.RegulatoryBody]), (req, res, next) => {
+        req.body.hospital = req.user.bodiesId;
         Maintenance.findByIdAndUpdate(req.params.maintenanceId, {
                 $set: req.body
             }, {
                 new: true
             }).then(async (maintenance) => {
-                if (maintenance.status === 2 ){
-                    await Drone.findByIdAndUpdate(maintenance.droneId,{
-                        $set: {status:0}
+                if (maintenance.status === 2) {
+                    await Drone.findByIdAndUpdate(maintenance.droneId, {
+                        $set: {
+                            status: 0
+                        }
                     }, {
                         new: true
                     }).exec();
                 } else {
-                    await Drone.findByIdAndUpdate(maintenance.droneId,{
-                        $set: {status:2}
+                    await Drone.findByIdAndUpdate(maintenance.droneId, {
+                        $set: {
+                            status: 2
+                        }
                     }, {
                         new: true
                     }).exec();
@@ -136,7 +145,7 @@ maintenanceRouter.route('/:maintenanceId')
             }, (err) => next(err))
             .catch((err) => next(err));
     })
-    .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+    .delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin, UserRole.RegulatoryBody]), (req, res, next) => {
         Maintenance.findByIdAndRemove(req.params.maintenanceId)
             .then((_) => {
                 let message = {

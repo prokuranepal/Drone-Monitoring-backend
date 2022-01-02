@@ -19,6 +19,7 @@ module.exports = (io) => {
             console.log(`socket of drone ${droneName} : ${socket.id}`);
             actualSocket.to('drone').clients((error, clients) => {
                 if (error) throw error;
+                let droneMessage = {};
                 if (clients.length == 0) {
                     Drone.findOne({
                             droneId: droneName

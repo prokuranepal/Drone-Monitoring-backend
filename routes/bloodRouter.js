@@ -3,6 +3,7 @@ const bodyparser = require('body-parser');
 const mongoose = require('mongoose');
 const authenticate = require('../authenticate');
 const cors = require('./cors');
+const UserRole = require('../utils/utils').UserRole;
 
 const Blood = require('../models/blood');
 const bloodRouter = express.Router();
@@ -14,7 +15,7 @@ bloodRouter.route('/')
   .options(cors.corsWithOptions, (req, res) => {
     res.sendStatus(200);
   })
-  .get(cors.cors, (req, res, next) => {
+  .get(cors.corsWithOptions,authenticate.verifyUser,authenticate.checkIsInRoles([UserRole.SuperAdmin, UserRole.RegulatoryBody]), (req, res, next) => {
     if (req.query.bloodGroup) {
       Blood.find({
           bloodGroup: req.query.bloodGroup
@@ -33,14 +34,14 @@ bloodRouter.route('/')
         .catch((err) => next(err));
     }
   })
-  .post(cors.cors, (req, res, next) => {
+  .post(cors.corsWithOptions,authenticate.verifyUser,authenticate.checkIsInRoles([UserRole.SuperAdmin, UserRole.RegulatoryBody]), (req, res, next) => {
     Blood.create(req.body)
       .then((blood) => {
         success_response(res, blood);
       }, (err) => next(err))
       .catch((err) => next(err));
   })
-  .delete(cors.cors, (req, res, next) => {
+  .delete(cors.corsWithOptions,authenticate.verifyUser,authenticate.checkIsInRoles([UserRole.SuperAdmin, UserRole.RegulatoryBody]), (req, res, next) => {
     if (req.query.bloodGroup) {
       Blood.remove({
           bloodGroup: req.query.bloodGroup
@@ -70,7 +71,7 @@ bloodRouter.route('/:bloodId')
   .options(cors.corsWithOptions, (req, res) => {
     res.sendStatus(200);
   })
-  .get(cors.corsWithOptions, (req, res, next) => {
+  .get(cors.corsWithOptions,authenticate.verifyUser,authenticate.checkIsInRoles([UserRole.SuperAdmin, UserRole.RegulatoryBody]), (req, res, next) => {
     Blood.findOne({
         _id: req.params.bloodId
       })
@@ -80,7 +81,7 @@ bloodRouter.route('/:bloodId')
       }, (err) => next(err))
       .catch((err) => next(err));
   })
-  .put(cors.cors, (req, res, next) => {
+  .put(cors.corsWithOptions,authenticate.verifyUser,authenticate.checkIsInRoles([UserRole.SuperAdmin, UserRole.RegulatoryBody]), (req, res, next) => {
     Blood.findByIdAndUpdate(req.params.bloodId, {
         $set: req.body
       }, {
@@ -91,7 +92,7 @@ bloodRouter.route('/:bloodId')
       }, (err) => next(err))
       .catch((err) => next(err));
   })
-  .delete(cors.cors, (req, res, next) => {
+  .delete(cors.corsWithOptions,authenticate.verifyUser,authenticate.checkIsInRoles([UserRole.SuperAdmin, UserRole.RegulatoryBody]), (req, res, next) => {
     Blood.findByIdAndRemove(req.params.bloodId)
       .then((blood) => {
         message = {

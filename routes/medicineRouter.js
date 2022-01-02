@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 
 const authenticate = require('../authenticate');
 const cors = require('./cors');
+const UserRole = require('../utils/utils').UserRole;
 
 const Medicines = require('../models/medicines');
 const success_response = require('./functions/success_response');
@@ -16,9 +17,9 @@ medicineRouter.route('/')
 	.options(cors.corsWithOptions, (req, res) => {
 		res.sendStatus(200);
 	})
-	.get(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+	.get(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin, UserRole.RegulatoryBody]), (req, res, next) => {
 		var query_object = {
-			healthFacilities: req.user.healthFacilities
+			healthFacilities: req.user.bodiesId
 		}
 		if (req.query.type) {
 			query_object['type'] = (req.query.type).toLowerCase()
@@ -29,9 +30,9 @@ medicineRouter.route('/')
 			}, (err) => next(err))
 			.catch((err) => next(err));
 	})
-	.post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+	.post(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin, UserRole.RegulatoryBody]), (req, res, next) => {
 		req.body.user_added = req.user;
-		req.body.healthFacilities = req.user.healthFacilities;
+		req.body.healthFacilities = req.user.bodiesId;
 		Medicines.create(req.body)
 			.then((medicine) => {
 				success_response(res, medicine);
@@ -42,9 +43,9 @@ medicineRouter.route('/')
 		res.statusCode = 403;
 		res.end(`PUT operation not supported /medicines`);
 	})
-	.delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+	.delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin, UserRole.RegulatoryBody]), (req, res, next) => {
 		Medicines.remove({
-				healthFacilities: req.user.healthFacilities
+				healthFacilities: req.user.bodiesId
 			})
 			.then((medicine) => {
 				message = {
@@ -60,7 +61,7 @@ medicineRouter.route('/:medicineId')
 	.options(cors.corsWithOptions, (req, res) => {
 		res.sendStatus(200);
 	})
-	.get(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+	.get(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin, UserRole.RegulatoryBody]), (req, res, next) => {
 		Medicines.findById(req.params.medicineId)
 			.populate({
 				path: "user_added",
@@ -75,9 +76,9 @@ medicineRouter.route('/:medicineId')
 		res.statusCode = 403;
 		res.end(`POST operation not supported /medicines/${req.params.medicineId}`);
 	})
-	.put(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+	.put(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin, UserRole.RegulatoryBody]), (req, res, next) => {
 		req.body.user_added = req.user;
-		req.body.healthFacilities = req.user.healthFacilities;
+		req.body.healthFacilities = req.user.bodiesId;
 		Medicines.findByIdAndUpdate(req.params.medicineId, {
 				$set: req.body
 			}, {
@@ -88,7 +89,7 @@ medicineRouter.route('/:medicineId')
 			}, (err) => next(err))
 			.catch((err) => next(err));
 	})
-	.delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+	.delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin, UserRole.RegulatoryBody]), (req, res, next) => {
 		Medicines.findByIdAndRemove(req.params.medicineId)
 			.then((medicine) => {
 				message = {

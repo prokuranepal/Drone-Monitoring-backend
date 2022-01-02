@@ -7,90 +7,81 @@ const authenticate = require('../authenticate');
 const cors = require('./cors');
 const success_response = require('./functions/success_response');
 
-const Hospital = require('../models/healthFacilities');
+const RegulatoryBodies = require('../models/regulatoryBodies');
 
-const hospitalRouter = express.Router();
+const regulatoryBodiesRouter = express.Router();
 
-hospitalRouter.use(bodyParser.json());
+regulatoryBodiesRouter.use(bodyParser.json());
 
 
-hospitalRouter.route('/')
+regulatoryBodiesRouter.route('/')
     .options(cors.corsWithOptions, (req, res) => {
         res.sendStatus(200);
     })
-    .get(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin, UserRole.RegulatoryBody]), (req, res, next) => {
-        Hospital.find({
-                type: 'Hospital'
-            })
-            .then((hospital) => {
-                success_response(res, hospital);
+    .get(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin]), (req, res, next) => {
+        RegulatoryBodies.find()
+            .then((regulatoryBodies) => {
+                success_response(res, regulatoryBodies);
             }, (err) => next(err))
             .catch((err) => next(err));
     })
     .post(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin]), (req, res, next) => {
-        req.body.type = 'Hospital';
-        Hospital.create(req.body)
-            .then((hospital) => {
-                success_response(res, hospital);
+        RegulatoryBodies.create(req.body)
+            .then((regulatoryBodies) => {
+                success_response(res, regulatoryBodies);
             }, (err) => next(err))
             .catch((err) => next(err));
     })
     .put(cors.corsWithOptions, (req, res, next) => {
         res.statusCode = 403;
-        res.end(`PUT operation not supported /hospital`);
+        res.end(`PUT operation not supported /regulatoryBodies`);
     })
     .delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin]), (req, res, next) => {
-        Hospital.remove({
-                type: 'Hospital'
-            })
-            .then((hospital) => {
-                success_response(res, hospital);
+        RegulatoryBodies.remove()
+            .then((regulatoryBodies) => {
+                success_response(res, regulatoryBodies);
             }, (err) => next(err))
             .catch((err) => next(err));
     });
 
-hospitalRouter.route('/:hospitalId')
+regulatoryBodiesRouter.route('/:regulatoryBodiesId')
     .options(cors.corsWithOptions, (req, res) => {
         res.sendStatus(200);
     })
     .get(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin, UserRole.RegulatoryBody]), (req, res, next) => {
-        Hospital.findOne({
-                _id: req.params.hospitalId,
-                type: 'Hospital'
+        RegulatoryBodies.findOne({
+                _id: req.params.regulatoryBodiesId,
             })
-            .then((hospital) => {
-                success_response(res, hospital);
+            .then((regulatoryBodies) => {
+                success_response(res, regulatoryBodies);
             }, (err) => next(err))
             .catch((err) => next(err));
     })
     .post(cors.corsWithOptions, (req, res, next) => {
         res.statusCode = 403;
-        res.end(`POST operation not supported /hospital/${req.params.hospitalId}`);
+        res.end(`POST operation not supported /regulatoryBodies/${req.params.regulatoryBodiesId}`);
     })
     .put(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin]), (req, res, next) => {
-        req.body.type = 'Hospital';
-        Hospital.findOneAndUpdate({
-                _id: req.params.hospitalId,
-                type: 'Hospital'
+        RegulatoryBodies.findOneAndUpdate({
+                _id: req.params.regulatoryBodiesId,
             }, {
                 $set: req.body
             }, {
                 new: true
-            }).then((hospital) => {
-                success_response(res, hospital);
+            }).then((regulatoryBodies) => {
+                success_response(res, regulatoryBodies);
             }, (err) => next(err))
             .catch((err) => next(err));
     })
     .delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.checkIsInRoles([UserRole.SuperAdmin]), (req, res, next) => {
-        Hospital.findOneAndRemove({
-                _id: req.params.hospitalId,
-                type: 'Hospital'
+        RegulatoryBodies.findOneAndRemove({
+                _id: req.params.regulatoryBodiesId,
             })
-            .then((hospital) => {
-                success_response(res, hospital);
+            .then((regulatoryBodies) => {
+                success_response(res, regulatoryBodies);
             }, (err) => next(err))
             .catch((err) => next(err));
     });
 
 
-module.exports = hospitalRouter;
+module.exports = regulatoryBodiesRouter;

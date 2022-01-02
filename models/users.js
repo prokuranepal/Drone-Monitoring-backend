@@ -1,19 +1,16 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var passportLocalMongoose = require('passport-local-mongoose');
+var UserRole = require('../utils/utils').UserRole;
 
 var User = new Schema({
-    firstName: {
-        type: String,
-        required: true
-    },
-    lastName: {
+    name: {
         type: String,
         required: true
     },
     email: {
-        type:String,
-        required:true,
+        type: String,
+        required: true,
         unique: true
     },
     phoneNumber: {
@@ -21,31 +18,30 @@ var User = new Schema({
         required: true,
         unique: true
     },
-    healthFacilities:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:'HealthFacilities',
-        required:true
+    bodiesType: {
+        type: String,
+        required: false,
+        enum: [UserRole.SuperAdmin, UserRole.RegulatoryBody, UserRole.Hospital, UserRole.HealthPost]
     },
-    province: {
-        type:String,
-        default:null,
+    bodiesId: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: false
     },
-    district: {
-        type:String,
-        default: null,
+    department: {
+        type: String,
+        required: false
     },
-    town: {
-        type:String,
-        default:null,
+    position: {
+        type: String,
+        required: false
     },
-    admin: {
-        type: Boolean,
-        default: false
-    }
 }, {
     timestamps: true
 });
 
-User.plugin(passportLocalMongoose, { usernameField: 'email', usernameQueryFields: ['phoneNumber'] });
+User.plugin(passportLocalMongoose, {
+    usernameField: 'email',
+    usernameQueryFields: ['phoneNumber']
+});
 
 module.exports = mongoose.model('User', User);
